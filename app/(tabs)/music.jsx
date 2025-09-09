@@ -52,9 +52,9 @@ export default function MusicLibrary() {
                                         setParamsStore(item)
                                       }}>
                       <Image
-                          resizeMode="contain"
+                          resizeMode="cover"
                           style={styles.boxImage}
-                          source={require("../../assets/images/react-logo.png")}
+                          source={require("../../assets/images/my-music-default-cover.jpg")}
                       />
                       <View style={styles.boxBottomContainer}>
                         <Text>{item.name}</Text>
@@ -78,7 +78,7 @@ export default function MusicLibrary() {
 
 const Header = () => (
     <Appbar.Header style={styles.header}>
-      <Appbar.Action icon="plus" onPress={() => {
+      <Appbar.Action icon="refresh" onPress={() => {
       }}/>
     </Appbar.Header>
 );
