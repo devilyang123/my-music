@@ -46,11 +46,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "5fd80616-68c0-4d57-9c99-09348cf35894"
-      }
-    },
-    "owner": "devilyang"
+      "router": {}
+    }
   }
 }
