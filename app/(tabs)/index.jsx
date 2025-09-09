@@ -1,111 +1,95 @@
-import { useRouter } from "expo-router";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Appbar } from "react-native-paper";
+import React from 'react'
+import {Image, StyleSheet, View} from 'react-native'
+import {Appbar, IconButton, Text} from 'react-native-paper'
+import TrackPlayer from 'react-native-track-player'
+import Slider from '@react-native-community/slider';
 
 export default function HomeScreen() {
-  const router = useRouter();
-
   return (
-    <>
-      <Header />
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.contentContainer}
-      >
-        <View style={styles.boxContainer}>
+      <>
+        <Appbar.Header/>
+        <View style={styles.container}>
+          {/* cover */}
           <Image
-            resizeMode="contain"
-            style={styles.boxImage}
-            source={require("../../assets/images/react-logo.png")}
+              source={require('../../assets/images/react-logo.png')}
+              style={styles.artwork}
           />
-          <View style={styles.boxBottomContainer}>
-            <Text>BookishEnglish</Text>
-            <View style={styles.boxBottomTextContainer}>
-              <Text>8 Music</Text>
-              <Text>06:55:02</Text>
-            </View>
+
+          {/* title */}
+          <Text style={styles.title}>empty queue</Text>
+
+          {/* progress */}
+          <View style={styles.progressSliderContainer}>
+            <Slider
+                minimumValue={0}
+                maximumValue={1}
+                minimumTrackTintColor="#FFFFFF"
+                maximumTrackTintColor="#000000"
+                style={{width: "100%"}}
+            />
+          </View>
+
+          {/* time */}
+          <View style={styles.progressTimeContainer}>
+            <Text>00:00:00</Text>
+            <Text>00:00:00</Text>
+          </View>
+
+          {/* operation */}
+          <View style={styles.controlContainer}>
+            <IconButton icon="skip-previous" size={45} onPress={() => TrackPlayer.skipToPrevious()}/>
+            <IconButton icon="pause-circle" size={50}/>
+            <IconButton icon="skip-next" size={45} onPress={() => TrackPlayer.skipToNext()}/>
+            <IconButton icon="repeat-once" size={30}/>
           </View>
         </View>
-        <View style={styles.boxContainer}>
-          <Image
-            resizeMode="contain"
-            style={styles.boxImage}
-            source={require("../../assets/images/react-logo.png")}
-          />
-          <View style={styles.boxBottomContainer}>
-            <Text>BookishEnglish</Text>
-            <View style={styles.boxBottomTextContainer}>
-              <Text>8 Music</Text>
-              <Text>06:55:02</Text>
-            </View>
-          </View>
-        </View>
-        <View style={styles.boxContainer}>
-          <Image
-            resizeMode="contain"
-            style={styles.boxImage}
-            source={require("../../assets/images/react-logo.png")}
-          />
-          <View style={styles.boxBottomContainer}>
-            <Text>BookishEnglish</Text>
-            <View style={styles.boxBottomTextContainer}>
-              <Text>8 Music</Text>
-              <Text>06:55:02</Text>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-    </>
-  );
+      </>
+  )
 }
 
-const Header = () => (
-  <Appbar.Header style={styles.header}>
-    <Appbar.Action icon="plus" onPress={() => {}} />
-  </Appbar.Header>
-);
-
 const styles = StyleSheet.create({
-  header: {
-    justifyContent: "flex-end",
-  },
   container: {
     flex: 1,
+    flexDirection: "column",
+    justifyContent: 'flex-end',
+    alignItems: 'center',
     backgroundColor: "#fffbff",
   },
-  contentContainer: {
-    flexDirection: "row",
-    flexGrow: 1, // 强制内容容器扩展到 ScrollView 高度
-    justifyContent: "space-start",
-    alignItems: "flex-start",
-    flexWrap: "wrap",
+  artwork: {
+    width: "85%",
+    height: "50%",
+    borderRadius: 16,
+    marginBottom: 80,
+    // backgroundColor: "red"
   },
-  boxContainer: {
-    // backgroundColor: "red",
-    width: "50%",
-    height: 180,
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  boxBottomContainer: {
-    // backgroundColor: "pink",
-    width: "100%",
-    height: 50,
-    flexDirection: "column",
-    justifyContent: "space-around",
-    alignItems: "center",
-  },
-  boxBottomTextContainer: {
-    // backgroundColor: "blue",
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  boxImage: {
-    backgroundColor: "red",
-    height: 120,
+  title: {
+    fontSize: 14,
+    marginBottom: 10,
+    textAlign: 'center',
     width: "90%",
-    borderRadius: 20,
+    // backgroundColor: "blue"
   },
-});
+  progressSliderContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    height: 20,
+    width: "90%",
+    // backgroundColor: "red"
+  },
+  progressTimeContainer: {
+    flexDirection: "row",
+    height: 20,
+    width: "90%",
+    justifyContent: 'space-between',
+    // backgroundColor: "yellow"
+  },
+  controlContainer: {
+    flexDirection: 'row',
+    width: "90%",
+    justifyContent: "center",
+    alignItems: 'center',
+    marginTop: 30,
+    marginBottom: 30,
+    // backgroundColor: "green"
+  },
+})
