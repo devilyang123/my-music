@@ -128,7 +128,7 @@ export default function MusicList() {
         </Appbar.Header>
         {musicListState && musicListState.length === 0 ?
             <View style={styles.emptyContainer}>
-              <Text>No music files found.</Text>
+              <Text>No Music Files Found</Text>
             </View>
             :
             <ScrollView style={styles.container}
