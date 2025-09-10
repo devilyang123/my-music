@@ -16,52 +16,68 @@ const Settings = () => {
 
 
   const getUserGrantDirs = async () => {
+    console.log("Settings GetUserGrantDirs start")
     try {
       const userGrantDirArr = await getItem(Storage.USER_PICK_DIR);
-      console.log("Settings Storage: ", userGrantDirArr)
+      console.log("Settings GetUserGrantDirs from cache: ", userGrantDirArr)
       if (userGrantDirArr != null) {
         setUserPickDir(JSON.parse(userGrantDirArr))
         useUserGrantDirStore.getState().setUserGrantDir(JSON.parse(userGrantDirArr))
-        console.log("Settings useUserGrantDirStore", useUserGrantDirStore.getState().useUserGrantDir)
       }
-    } catch (e) {
-      console.log(e)
+    } catch (err) {
+      console.log("Settings GetUserGrantDirs err: ", err)
+    }
+  };
+
+  // let user grant dir
+  const userPickDirectory = async () => {
+    console.log("Settings UserPickDirectory start")
+    try {
+      const userGrantDir = await ScopedStorage.openDocumentTree(true)
+      if (userGrantDir == null){
+        console.log("Settings UserPickDirectory grant fail")
+        return
+      }
+      // grant success
+      console.log("Settings UserPickDirectory grant success")
+      if (userPickDirs == null) {
+        // first grant
+        console.log("Settings UserPickDirectory first grant")
+        const userPickDirArr = [userGrantDir]
+        await setItem(Storage.USER_PICK_DIR, userPickDirArr)
+        await getUserGrantDirs()
+      } else {
+        // need to valid grant dir exists
+        console.log("Settings UserPickDirectory valid grant dir exists")
+        let index = userPickDirs.findIndex(item =>  item.uri === userGrantDir.uri)
+        if (index === -1) {
+          // not exists
+          console.log("Settings UserPickDirectory valid grant dir not exists")
+          const userGrantDirArr = await getItem(Storage.USER_PICK_DIR);
+          if (userGrantDirArr != null){
+            const userGrantDirArrObj = JSON.parse(userGrantDirArr)
+            userGrantDirArrObj.push(userGrantDir)
+            await setItem(Storage.USER_PICK_DIR, userGrantDirArrObj)
+            await getUserGrantDirs()
+          }
+        }
+      }
+    }catch (err){
+      console.log("Settings UserPickDirectory err: ", err)
     }
   };
 
   // remove all user grant dir
   const removeAllGrantDirs = async () => {
+    console.log("Settings RemoveAllGrantDirs start")
     try {
       await removeItem(Storage.USER_PICK_DIR)
       useUserGrantDirStore.getState().removeUserGrantDir()
       setUserPickDir(null)
-    } catch (e) {
-      console.log(e)
+    } catch (err) {
+      console.log("Settings RemoveAllGrantDirs err: ", err)
     }
   }
-
-
-  // let user grant dir
-  const userPickDirectory = async () => {
-    const userGrantDir = await ScopedStorage.openDocumentTree(true)
-    if (userGrantDir != null) {
-      // grant success
-      if (userPickDirs == null) {
-        // first grant
-        const userPickDirArr = [userGrantDir]
-        await setItem(Storage.USER_PICK_DIR, userPickDirArr)
-        getUserGrantDirs()
-      } else {
-        // todo need to valid grant dir exists
-        const userGrantDirArr = await getItem(Storage.USER_PICK_DIR);
-        const userGrantDirArrObj = JSON.parse(userGrantDirArr)
-        userGrantDirArrObj.push(userGrantDir)
-        await setItem(Storage.USER_PICK_DIR, userGrantDirArrObj)
-        getUserGrantDirs()
-      }
-    }
-  };
-
 
   return (
       <>
