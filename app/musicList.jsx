@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
-import {ScrollView, StyleSheet, TouchableOpacity} from "react-native";
-import {Appbar, List, Text} from "react-native-paper";
+import {ScrollView, StyleSheet, TouchableOpacity, View} from "react-native";
+import {Appbar, List, Text, Button} from "react-native-paper";
 import * as ScopedStorage from "react-native-scoped-storage"
 import {useMusicLibStore} from "@/config/ZustandStore";
 import TrackPlayer from 'react-native-track-player';
@@ -18,27 +18,6 @@ const player = async (musicListState, index) => {
   await TrackPlayer.setQueue(tackArr)
   await TrackPlayer.skip(index)
   await TrackPlayer.play()
-
-  // let trackIndex = await TrackPlayer.getActiveTrackIndex();
-  // console.log("currentTrackIndex: ", trackIndex);
-  //
-  // let trackObject = await TrackPlayer.getTrack(trackIndex);
-  // console.log("currentMusic: ", trackObject);
-  //
-  // const progress = await TrackPlayer.getProgress();
-  // console.log("progress:", progress);
-  //
-  // let playBackState = await TrackPlayer.getPlaybackState()
-  // console.log("playBackState:", playBackState)
-  //
-  // let queue = await TrackPlayer.getQueue()
-  // console.log("queue:", queue);
-  //
-  // let rate = await TrackPlayer.getRate()
-  // console.log("rate:", rate);
-  //
-  // let repeatMode = await TrackPlayer.getRepeatMode()
-  // console.log("repeatMode:", repeatMode);
 }
 
 
@@ -47,13 +26,17 @@ export default function MusicList() {
   const params = useMusicLibStore((state) => state.musicLib);
   console.log('MusicList params:', params);
 
-  const [musicListState, setMusicList] = useState([]);
+  const [musicListState, setMusicListState] = useState([]);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+
 
   useEffect(() => {
-    loadMusicList()
+     loadMusicList();
   }, [params])
 
-  console.log('MusicList musicListState: ', musicListState);
+  useEffect(() => {
+    setSelectedItem();
+  }, [musicListState]);
 
   const loadMusicList = async () => {
     console.log('MusicList loadMusicList');
@@ -61,12 +44,25 @@ export default function MusicList() {
       if (params != null) {
         const musicList = await ScopedStorage.listFiles(params.uri);
         const filterData = filterAudioFiles(musicList)
-        setMusicList(filterData)
+        setMusicListState(filterData)
       } else {
         console.log('MusicList err, params is empty');
       }
     } catch (err) {
       console.log('MusicList err:', err);
+    }
+  }
+
+  const setSelectedItem = async () => {
+    const currentTrack = await TrackPlayer.getActiveTrack()
+    if (currentTrack) {
+      console.log('MusicList currentTrackUri:', currentTrack.id);
+      musicListState.forEach((item, index) => {
+        if (currentTrack.id === item.uri){
+          console.log('MusicList itemUri:', item.uri);
+          setSelectedIndex(index)
+        }
+      })
     }
   }
 
@@ -93,39 +89,81 @@ export default function MusicList() {
 
   return (
       <>
-        <Appbar.Header/>
+        <Appbar.Header style={styles.header}>
+          <Appbar.Action icon="refresh" onPress={() => {
+          }}/>
+        </Appbar.Header>
         {musicListState && musicListState.length === 0 ?
             <Text>No music files found.</Text>
             :
             <ScrollView style={styles.container}
                         contentContainerStyle={styles.contentContainer}>
-              {musicListState.map((item, index) => (
-                  <TouchableOpacity key={index} onPress={() => player(musicListState, index)}>
-                    <List.Item
-                        title={item.name}
-                        left={props => <List.Icon {...props} icon="music"/>}
-                        titleNumberOfLines={2}
-                        titleStyle={{fontSize: 14,textAlign:"left"}}
-                        titleEllipsizeMode="clip"
-                    />
-                  </TouchableOpacity>
-              ))}
-            </ScrollView>}
-      </>
-  )
-}
+              {musicListState.map((item, index) => {
+                const isSelected = index === selectedIndex;
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
+                return (
+                    <TouchableOpacity
+                        key={index}
+                        onPress={() => {
+                          setSelectedIndex(index);
+                          player(musicListState, index);
+                        }}
+                        style={[
+                          styles.musicItemContainer,
+                          isSelected && styles.selectedItem,
+                        ]}
+                    >
+                      <Button icon="music" compact />
+                        <View style={styles.nameContainer}>
+                          <Text
+                              numberOfLines={3}
+                              ellipsizeMode="tail"
+                              style={styles.nameStyle}
+                          >
+                            {item.name}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>}
+        </>
+    )
+  }
+
+  const styles = StyleSheet.create({
+    header: {
+      justifyContent: "flex-end",
+    },
+    container: {
+      flexDirection: "row",
     flex: 1,
     backgroundColor: "#fffbff",
   },
   contentContainer: {
     flexDirection:"column",
-    width: "96%",
+    width: "100%",
     justifyContent: "flex-start",
-    alignItems: "flex-start",
+    alignItems: "center",
     // backgroundColor:"red"
   },
+  musicItemContainer: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 5,
+    marginVertical: 4,
+    borderRadius: 8,
+    // backgroundColor: "#222",
+  },
+  selectedItem: {
+    backgroundColor: "#e2e4e3",
+  },
+  nameContainer: {
+    width: "85%",
+    // backgroundColor:"pink"
+  },
+  nameStyle:{
+    fontSize: 16,
+  }
 });

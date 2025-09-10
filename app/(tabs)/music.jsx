@@ -38,7 +38,10 @@ export default function MusicLibrary() {
   console.log("MusicLibrary useUserGrantDirStore", storeUserHasGrantLib)
   return (
       <>
-        <Header/>
+        <Appbar.Header style={styles.header}>
+          <Appbar.Action icon="refresh" onPress={() => {
+          }}/>
+        </Appbar.Header>
         <ScrollView
             style={styles.container}
             contentContainerStyle={styles.contentContainer}
@@ -75,13 +78,6 @@ export default function MusicLibrary() {
       </>
   );
 };
-
-const Header = () => (
-    <Appbar.Header style={styles.header}>
-      <Appbar.Action icon="refresh" onPress={() => {
-      }}/>
-    </Appbar.Header>
-);
 
 const styles = StyleSheet.create({
   header: {
