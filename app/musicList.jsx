@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
-import {ScrollView, StyleSheet, Text, TouchableOpacity} from "react-native";
-import {Appbar, List} from "react-native-paper";
+import {ScrollView, StyleSheet, TouchableOpacity} from "react-native";
+import {Appbar, List, Text} from "react-native-paper";
 import * as ScopedStorage from "react-native-scoped-storage"
 import {useMusicLibStore} from "@/config/ZustandStore";
 import TrackPlayer from 'react-native-track-player';
@@ -104,6 +104,9 @@ export default function MusicList() {
                     <List.Item
                         title={item.name}
                         left={props => <List.Icon {...props} icon="music"/>}
+                        titleNumberOfLines={2}
+                        titleStyle={{fontSize: 14,textAlign:"left"}}
+                        titleEllipsizeMode="clip"
                     />
                   </TouchableOpacity>
               ))}
@@ -119,7 +122,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#fffbff",
   },
   contentContainer: {
+    flexDirection:"column",
+    width: "96%",
     justifyContent: "flex-start",
     alignItems: "flex-start",
+    // backgroundColor:"red"
   },
 });

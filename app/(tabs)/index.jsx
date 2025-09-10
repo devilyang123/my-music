@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react'
-import {Image, StyleSheet, View} from 'react-native'
+import {Image, StyleSheet, View, Dimensions} from 'react-native'
 import {Appbar, IconButton, Text} from 'react-native-paper'
 import TrackPlayer, {
   usePlaybackState,
@@ -10,6 +10,8 @@ import TrackPlayer, {
   RepeatMode
 } from 'react-native-track-player'
 import Slider from '@react-native-community/slider';
+import TextTicker from "react-native-text-ticker";
+
 
 let isPlayerSetup = false;
 
@@ -25,6 +27,8 @@ export async function setupPlayerOnce() {
 
 
 export default function HomeScreen() {
+
+  const { width } = Dimensions.get("window");
 
   useEffect(() => {
     setupPlayerOnce()
@@ -66,11 +70,18 @@ export default function HomeScreen() {
 
   // format time
   const formatTime = (seconds) => {
-    if (!seconds || isNaN(seconds)) return "0:00";
-    const mins = Math.floor(seconds / 60);
+    if (!seconds || isNaN(seconds)) return "00:00:00";
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+
+    const hh = String(hrs).padStart(2, "0");
+    const mm = String(mins).padStart(2, "0");
+    const ss = String(secs).padStart(2, "0");
+
+    return `${hh}:${mm}:${ss}`;
   };
+
 
   // swap repeat mode
   const toggleRepeatMode = async () => {
@@ -93,7 +104,17 @@ export default function HomeScreen() {
           />
 
           {/* title */}
-          <Text style={styles.title}>{trackTitle} </Text>
+          <TextTicker
+              style={styles.title}
+              duration={8000}
+              loop
+              bounce={false}
+              repeatSpacer={50}
+              marqueeDelay={1000}
+              width={width * 0.8}
+          >
+            {trackTitle}
+          </TextTicker>
 
           {/* progress */}
           <View style={styles.progressSliderContainer}>
@@ -167,7 +188,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 10,
     textAlign: 'center',
-    width: "90%",
+    // width: 280,
     height: 20,
     // backgroundColor: "blue"
   },
