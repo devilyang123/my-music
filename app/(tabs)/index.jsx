@@ -1,6 +1,6 @@
-import React, {useEffect, useState} from 'react'
+import React, {useEffect, useState, useRef} from 'react'
 import {Image, StyleSheet, View, Dimensions} from 'react-native'
-import {Appbar, IconButton, Text} from 'react-native-paper'
+import {Appbar, IconButton, Text,Dialog ,Portal, Button} from 'react-native-paper'
 import TrackPlayer, {
   usePlaybackState,
   useProgress,
@@ -11,6 +11,7 @@ import TrackPlayer, {
 } from 'react-native-track-player'
 import Slider from '@react-native-community/slider';
 import TextTicker from "react-native-text-ticker";
+import { Picker } from "@react-native-picker/picker";
 
 
 let isPlayerSetup = false;
@@ -41,6 +42,34 @@ export default function HomeScreen() {
   const [seeking, setSeeking] = useState(false);
   const [seekValue, setSeekValue] = useState(0);
   const [repeatMode, setRepeatMode] = useState(RepeatMode.Off);
+
+  const [timerVisible, setTimerVisible] = useState(false);
+  const [hasTimer, setHasTimer] = useState(false);
+  const timerRef = useRef(null);
+  const [selectedHour, setSelectedHour] = useState(0);
+  const [selectedMinute, setSelectedMinute] = useState(0);
+  const hoursArray = Array.from({ length: 24 }, (_, i) => i);
+  const minutesArray = Array.from({ length: 60 }, (_, i) => i);
+
+  const startTimer = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    const totalMs = (selectedHour * 60 + selectedMinute) * 60 * 1000;
+    if (totalMs > 0) {
+      timerRef.current = setTimeout(() => {
+        TrackPlayer.pause();
+        setHasTimer(false);
+      }, totalMs);
+      setHasTimer(true);
+    }
+    setTimerVisible(false);
+  };
+
+  const clearTimer = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setHasTimer(false);
+    setTimerVisible(false);
+  };
+
 
 
   const setTitle = async () => {
@@ -150,6 +179,11 @@ export default function HomeScreen() {
 
           {/* operation */}
           <View style={styles.controlContainer}>
+            <IconButton
+                icon={hasTimer ? "timer" : "timer-off"}
+                size={20}
+                onPress={() => setTimerVisible(true)}
+            />
             <IconButton icon="skip-previous" size={40} onPress={() => TrackPlayer.skipToPrevious()}/>
             <IconButton
                 icon={playbackState.state === State.Playing ? "pause-circle" : "play-circle"}
@@ -165,6 +199,46 @@ export default function HomeScreen() {
             } size={20} onPress={() => toggleRepeatMode()}/>
           </View>
         </View>
+
+        <Portal>
+          <Dialog visible={timerVisible} onDismiss={() => setTimerVisible(false)}>
+            <Dialog.Title>Sleep Timer</Dialog.Title>
+            <Dialog.Content>
+              <View style={{ flexDirection: "row", justifyContent: "center" }}>
+                <View style={{ flex: 1, alignItems: "center" }}>
+                  <Text>Hour</Text>
+                  <Picker
+                      selectedValue={selectedHour}
+                      onValueChange={(itemValue) => setSelectedHour(itemValue)}
+                      style={{ width: 100 }}
+                      mode="dropdown"
+                  >
+                    {hoursArray.map((h) => (
+                        <Picker.Item key={h} label={h.toString()} value={h} />
+                    ))}
+                  </Picker>
+                </View>
+                <View style={{ flex: 1, alignItems: "center" }}>
+                  <Text>Minute</Text>
+                  <Picker
+                      selectedValue={selectedMinute}
+                      onValueChange={(itemValue) => setSelectedMinute(itemValue)}
+                      style={{ width: 100 }}
+                      mode="dropdown"
+                  >
+                    {minutesArray.map((m) => (
+                        <Picker.Item key={m} label={m.toString()} value={m} />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
+            </Dialog.Content>
+            <Dialog.Actions>
+              {hasTimer && <Button onPress={clearTimer}>Clear</Button>}
+              <Button onPress={startTimer}>Confirm</Button>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
       </>
   )
 }
