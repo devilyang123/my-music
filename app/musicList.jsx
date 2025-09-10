@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {ScrollView, StyleSheet, TouchableOpacity, View} from "react-native";
-import {Appbar, List, Text, Button} from "react-native-paper";
+import {Appbar, Text, Button} from "react-native-paper";
 import * as ScopedStorage from "react-native-scoped-storage"
 import {useMusicLibStore} from "@/config/ZustandStore";
 import TrackPlayer from 'react-native-track-player';
@@ -31,7 +31,7 @@ export default function MusicList() {
 
 
   useEffect(() => {
-     loadMusicList();
+    loadMusicList();
   }, [params])
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function MusicList() {
     if (currentTrack) {
       console.log('MusicList currentTrackUri:', currentTrack.id);
       musicListState.forEach((item, index) => {
-        if (currentTrack.id === item.uri){
+        if (currentTrack.id === item.uri) {
           console.log('MusicList itemUri:', item.uri);
           setSelectedIndex(index)
         }
@@ -94,7 +94,9 @@ export default function MusicList() {
           }}/>
         </Appbar.Header>
         {musicListState && musicListState.length === 0 ?
-            <Text>No music files found.</Text>
+            <View style={styles.emptyContainer}>
+              <Text>No music files found.</Text>
+            </View>
             :
             <ScrollView style={styles.container}
                         contentContainerStyle={styles.contentContainer}>
@@ -113,35 +115,41 @@ export default function MusicList() {
                           isSelected && styles.selectedItem,
                         ]}
                     >
-                      <Button icon="music" compact />
-                        <View style={styles.nameContainer}>
-                          <Text
-                              numberOfLines={3}
-                              ellipsizeMode="tail"
-                              style={styles.nameStyle}
-                          >
-                            {item.name}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>}
-        </>
-    )
-  }
+                      <Button icon="music" compact/>
+                      <View style={styles.nameContainer}>
+                        <Text
+                            numberOfLines={3}
+                            ellipsizeMode="tail"
+                            style={styles.nameStyle}
+                        >
+                          {item.name}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                );
+              })}
+            </ScrollView>}
+      </>
+  )
+}
 
-  const styles = StyleSheet.create({
-    header: {
-      justifyContent: "flex-end",
-    },
-    container: {
-      flexDirection: "row",
+const styles = StyleSheet.create({
+  header: {
+    justifyContent: "flex-end",
+  },
+  emptyContainer:{
+    flex: 1,
+    backgroundColor: "#fffbff",
+    justifyContent:"center",
+    alignItems:"center"
+  },
+  container: {
+    flexDirection: "row",
     flex: 1,
     backgroundColor: "#fffbff",
   },
   contentContainer: {
-    flexDirection:"column",
+    flexDirection: "column",
     width: "100%",
     justifyContent: "flex-start",
     alignItems: "center",
@@ -163,7 +171,7 @@ export default function MusicList() {
     width: "85%",
     // backgroundColor:"pink"
   },
-  nameStyle:{
+  nameStyle: {
     fontSize: 16,
   }
 });
