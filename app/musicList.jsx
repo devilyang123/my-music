@@ -4,27 +4,30 @@ import {Appbar, Text, Button} from "react-native-paper";
 import * as ScopedStorage from "react-native-scoped-storage"
 import {useMusicLibStore} from "@/config/ZustandStore";
 import TrackPlayer from 'react-native-track-player';
-import  {getItem, setItem } from "@/config/Storage";
+import {getItem, removeItem, setItem} from "@/config/Storage";
 
 const player = async (musicListState, index) => {
-  console.log('MusicList player:', musicListState, index);
-  let tackArr = musicListState.map(item => {
-    return {
-      id: item.uri,
-      url: item.uri,
-      title: item.name,
-    }
-  })
-  await TrackPlayer.setQueue(tackArr)
-  await TrackPlayer.skip(index)
-  await TrackPlayer.play()
+  console.log('MusicList player start:', index);
+  try {
+    let tackArr = musicListState.map(item => {
+      return {
+        id: item.uri,
+        url: item.uri,
+        title: item.name,
+      }
+    })
+    await TrackPlayer.setQueue(tackArr)
+    await TrackPlayer.skip(index)
+    await TrackPlayer.play()
+  }catch (err){
+    console.log('MusicList player err:', err);
+  }
 }
-
 
 export default function MusicList() {
 
   const params = useMusicLibStore((state) => state.musicLib);
-  console.log('MusicList params:', params);
+  console.log('MusicList start, params:', params);
 
   const [musicListState, setMusicListState] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -66,16 +69,34 @@ export default function MusicList() {
     }
   }
 
+  const refreshMusicList = async () => {
+    console.log('MusicList refreshMusicList start');
+    try {
+      // clear cache
+      await removeItem(params.uri)
+      // reload data
+      await loadMusicList()
+    }catch (err){
+      console.log('MusicList refreshMusicList err', err);
+    }
+  }
+
+
   const setSelectedItem = async () => {
-    const currentTrack = await TrackPlayer.getActiveTrack()
-    if (currentTrack) {
-      console.log('MusicList currentTrackUri:', currentTrack.id);
-      musicListState.forEach((item, index) => {
-        if (currentTrack.id === item.uri) {
-          console.log('MusicList itemUri:', item.uri);
-          setSelectedIndex(index)
-        }
-      })
+    console.log('MusicList setSelectedItem start');
+    try {
+      const currentTrack = await TrackPlayer.getActiveTrack()
+      if (currentTrack) {
+        console.log('MusicList setSelectedItem currentTrackUri:', currentTrack.id);
+        musicListState.forEach((item, index) => {
+          if (currentTrack.id === item.uri) {
+            console.log('MusicList setSelectedItem itemUri:', item.uri);
+            setSelectedIndex(index)
+          }
+        })
+      }
+    }catch (err){
+      console.log('MusicList setSelectedItem err', err);
     }
   }
 
@@ -103,8 +124,7 @@ export default function MusicList() {
   return (
       <>
         <Appbar.Header style={styles.header}>
-          <Appbar.Action icon="refresh" onPress={() => {
-          }}/>
+          <Appbar.Action icon="refresh" onPress={() => refreshMusicList()}/>
         </Appbar.Header>
         {musicListState && musicListState.length === 0 ?
             <View style={styles.emptyContainer}>
