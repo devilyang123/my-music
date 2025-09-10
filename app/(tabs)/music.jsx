@@ -71,7 +71,9 @@ export default function MusicLibrary() {
               </>
               :
               <>
-                <Text>Empty</Text>
+                <View style={styles.emptyContainer}>
+                  <Text>Empty Library</Text>
+                </View>
               </>
           }
         </ScrollView>
@@ -121,5 +123,12 @@ const styles = StyleSheet.create({
     width: "90%",
     borderRadius: 20,
     // backgroundColor: "red",
+  },
+  emptyContainer: {
+    flex: 1,
+    height:"100%",
+    justifyContent: "center",
+    alignItems: "center",
+    // backgroundColor:"red"
   },
 });
