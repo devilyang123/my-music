@@ -17,15 +17,27 @@ import { Picker } from "@react-native-picker/picker";
 let isPlayerSetup = false;
 
 export async function setupPlayerOnce() {
-  if (isPlayerSetup) {
-    console.log("Player Has Already Setup")
-    return;
+  console.log("HomeScreen SetupPlayerOnce start")
+  try {
+    if (isPlayerSetup) {
+      console.log("HomeScreen SetupPlayerOnce Player Has Already Setup")
+      return;
+    }
+    await TrackPlayer.setupPlayer();
+    console.log("HomeScreen SetupPlayerOnce Player First Setup")
+    isPlayerSetup = true;
+  }catch (err){
+    console.log("HomeScreen SetupPlayerOnce err", err)
   }
-  await TrackPlayer.setupPlayer();
-  console.log("Player First Setup")
-  isPlayerSetup = true;
 }
-
+export async function resetPlayer(){
+  console.log("HomeScreen ResetPlayer start")
+  try {
+    await TrackPlayer.reset()
+  }catch (err){
+    console.log("HomeScreen ResetPlayer err", err)
+  }
+}
 
 export default function HomeScreen() {
 
@@ -70,20 +82,19 @@ export default function HomeScreen() {
     setTimerVisible(false);
   };
 
-
-
   const setTitle = async () => {
     const currentTrack = await TrackPlayer.getActiveTrack()
     if (currentTrack) {
       setTrackTitle(currentTrack.title || "");
     }
-  }
+  };
 
   useTrackPlayerEvents([Event.PlaybackActiveTrackChanged], (event) => {
-    // console.log(event)
     if (event.type === Event.PlaybackActiveTrackChanged) {
       console.log("change music");
-      setTrackTitle(event.track.title ?? "");
+      if (event.track){
+        setTrackTitle(event.track.title ?? "");
+      }
     }
   });
 
@@ -124,7 +135,9 @@ export default function HomeScreen() {
 
   return (
       <>
-        <Appbar.Header/>
+        <Appbar.Header style={styles.header}>
+          <Appbar.Action icon="stop-circle" onPress={() => resetPlayer()}/>
+        </Appbar.Header>
         <View style={styles.container}>
           {/* cover */}
           <Image
@@ -244,6 +257,9 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    justifyContent: "flex-end",
+  },
   container: {
     flex: 1,
     flexDirection: "column",

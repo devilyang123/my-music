@@ -14,7 +14,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/my-music-splash-icon.jpg",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#fffbff"
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
@@ -38,7 +38,7 @@
           "image": "./assets/images/my-music-splash-icon.jpg",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#fffbff"
         }
       ]
     ],
