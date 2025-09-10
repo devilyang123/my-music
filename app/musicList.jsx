@@ -4,7 +4,7 @@ import {Appbar, Text, Button} from "react-native-paper";
 import * as ScopedStorage from "react-native-scoped-storage"
 import {useMusicLibStore} from "@/config/ZustandStore";
 import TrackPlayer from 'react-native-track-player';
-
+import  {getItem, setItem } from "@/config/Storage";
 
 const player = async (musicListState, index) => {
   console.log('MusicList player:', musicListState, index);
@@ -39,17 +39,30 @@ export default function MusicList() {
   }, [musicListState]);
 
   const loadMusicList = async () => {
-    console.log('MusicList loadMusicList');
+    console.log('MusicList loadMusicList start');
     try {
       if (params != null) {
-        const musicList = await ScopedStorage.listFiles(params.uri);
-        const filterData = filterAudioFiles(musicList)
-        setMusicListState(filterData)
+        // get from cache
+        const cacheMusicList = await getItem(params.uri)
+        if (cacheMusicList == null) {
+          console.log('MusicList loadMusicList from file system');
+          // no cache
+          const musicList = await ScopedStorage.listFiles(params.uri);
+          const filterData = filterAudioFiles(musicList)
+          setMusicListState(filterData)
+          if (filterData.length > 0){
+            // set cache
+            await setItem(params.uri, filterData)
+          }
+        }else {
+          console.log('MusicList loadMusicList from cache');
+          setMusicListState(JSON.parse(cacheMusicList))
+        }
       } else {
-        console.log('MusicList err, params is empty');
+        console.log('MusicList loadMusicList err, params is empty');
       }
     } catch (err) {
-      console.log('MusicList err:', err);
+      console.log('MusicList loadMusicList err:', err);
     }
   }
 
