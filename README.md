@@ -1,10 +1,10 @@
 # 🎶 Welcome to My Music Player 👋
 
-## 1. Introduction
+## Introduction
 - A minimalistic, modern Android music player built with **Expo / React Native**.
 - Say goodbye to bloated features — focus purely on enjoying your music.
 
-## 2. Screenshots
+## Screenshots
 <div style="text-align: center;">
   <img src="assets/screenshots/player.jpg" width="250" alt="播放器主界面">
   <img src="assets/screenshots/sleep-timer.jpg" width="250" alt="定时关闭对话框">
@@ -19,12 +19,12 @@
 </div>
 
 
-## 3. Key Features
+## Key Features
 - User-defined local music library scanning
 - Essential playback controls (play, pause, previous, next, repeat-all, repeat-one)
 - Sleep timer
 
-## 4. Roadmap
+## Roadmap
 - Dark theme
 - Shuffle playback
 - Lyrics display
@@ -32,9 +32,13 @@
 - WebDAV support
 - ...more to come
 
-## 5. Tech Stack
+## Tech Stack
 - **React Native**
 - **Expo**
 - **Zustand** (state management)
 - **React Native Track Player** (media playback)
 - **React Native Paper** (UI component library)  
+
+## LICENSE 
+- The MIT License (MIT) 
+- [LICENSE](LICENSE)
