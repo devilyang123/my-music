@@ -146,17 +146,19 @@ export default function HomeScreen() {
           />
 
           {/* title */}
-          <TextTicker
-              style={styles.title}
-              duration={8000}
-              loop
-              bounce={false}
-              repeatSpacer={50}
-              marqueeDelay={1000}
-              width={width * 0.8}
-          >
-            {trackTitle}
-          </TextTicker>
+          <View style={styles.titleContainer}>
+            <TextTicker
+                style={styles.title}
+                duration={8000}
+                loop
+                bounce={false}
+                repeatSpacer={50}
+                marqueeDelay={1000}
+                // width={width * 0.8}
+            >
+              {trackTitle}
+            </TextTicker>
+          </View>
 
           {/* progress */}
           <View style={styles.progressSliderContainer}>
@@ -274,11 +276,18 @@ const styles = StyleSheet.create({
     marginBottom: 80,
     // backgroundColor: "red"
   },
+  titleContainer:{
+    flexDirection:"row",
+    justifyContent: "center",
+    alignItems:"center",
+    width:"88%",
+    // backgroundColor: "pink"
+  },
   title: {
     fontSize: 14,
     marginBottom: 10,
     textAlign: 'center',
-    // width: 280,
+    // width: "100%",
     height: 20,
     // backgroundColor: "blue"
   },
