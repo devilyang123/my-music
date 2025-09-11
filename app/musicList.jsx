@@ -122,7 +122,7 @@ export default function MusicList() {
   };
 
   return (
-      <>
+      <View style={styles.mainContainer}>
         <Appbar.Header style={styles.header}>
           <Appbar.Action icon="refresh" onPress={() => refreshMusicList()}/>
         </Appbar.Header>
@@ -132,7 +132,7 @@ export default function MusicList() {
               <Text>No Music Files Found</Text>
             </View>
             :
-            <ScrollView style={styles.container}
+            <ScrollView style={styles.scrollViewContainer}
                         contentContainerStyle={styles.contentContainer}>
               {musicListState.map((item, index) => {
                 const isSelected = index === selectedIndex;
@@ -163,31 +163,31 @@ export default function MusicList() {
                 );
               })}
             </ScrollView>}
-      </>
+      </View>
   )
 }
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1,
+    backgroundColor: "#fffbff",
+  },
   header: {
     justifyContent: "flex-end",
   },
   emptyContainer:{
     flex: 1,
-    backgroundColor: "#fffbff",
     justifyContent:"center",
     alignItems:"center"
   },
-  container: {
-    flexDirection: "row",
+  scrollViewContainer: {
     flex: 1,
-    backgroundColor: "#fffbff",
   },
   contentContainer: {
     flexDirection: "column",
     width: "100%",
     justifyContent: "flex-start",
     alignItems: "center",
-    // backgroundColor:"red"
   },
   musicItemContainer: {
     width: "100%",
@@ -196,14 +196,12 @@ const styles = StyleSheet.create({
     padding: 5,
     marginVertical: 4,
     borderRadius: 8,
-    // backgroundColor: "#222",
   },
   selectedItem: {
     backgroundColor: "#e2e4e3",
   },
   nameContainer: {
     width: "80%",
-    // backgroundColor:"pink"
   },
   nameStyle: {
     fontSize: 16,
