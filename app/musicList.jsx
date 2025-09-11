@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {ScrollView, StyleSheet, TouchableOpacity, View} from "react-native";
-import {Appbar, Text, Button} from "react-native-paper";
+import {Appbar, Text, Button, Divider } from "react-native-paper";
 import * as ScopedStorage from "react-native-scoped-storage"
 import {useMusicLibStore} from "@/config/ZustandStore";
 import TrackPlayer from 'react-native-track-player';
@@ -126,6 +126,7 @@ export default function MusicList() {
         <Appbar.Header style={styles.header}>
           <Appbar.Action icon="refresh" onPress={() => refreshMusicList()}/>
         </Appbar.Header>
+        <Divider/>
         {musicListState && musicListState.length === 0 ?
             <View style={styles.emptyContainer}>
               <Text>No Music Files Found</Text>
@@ -151,7 +152,7 @@ export default function MusicList() {
                       <Button icon="music" compact/>
                       <View style={styles.nameContainer}>
                         <Text
-                            numberOfLines={3}
+                            numberOfLines={1}
                             ellipsizeMode="tail"
                             style={styles.nameStyle}
                         >
@@ -201,7 +202,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#e2e4e3",
   },
   nameContainer: {
-    width: "85%",
+    width: "80%",
     // backgroundColor:"pink"
   },
   nameStyle: {

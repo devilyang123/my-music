@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
-import {StyleSheet, View} from "react-native";
-import {Appbar, List, Button,} from "react-native-paper";
+import {StyleSheet, View, } from "react-native";
+import {Appbar, Button, Divider, IconButton, Text} from "react-native-paper";
 import Storage, {getItem, removeItem, setItem} from "@/config/Storage";
 import {useUserGrantDirStore} from "@/config/ZustandStore";
 import * as ScopedStorage from "react-native-scoped-storage"
@@ -81,39 +81,54 @@ const Settings = () => {
 
   return (
       <>
-        <Appbar.Header/>
-        <View style={styles.container}>
+        <Appbar.Header>
+          <Appbar.Content title="Settings" />
+        </Appbar.Header>
+        <Divider/>
+        <View style={styles.settingTitleContainer}>
+          <Text style={styles.settingTitle}>Library Folders</Text>
+        </View>
+        <View style={styles.settingItemContainer}>
           {userPickDirs ?
               <>
-                <List.Section>
-                  <List.Subheader>Library Folders</List.Subheader>
-                  {userPickDirs.map((item, index) => (
-                      <List.Item
-                          key={index}
-                          title={item.name}
-                          left={props => <List.Icon {...props} icon="folder"/>}></List.Item>
-                  ))}
-                  <View style={styles.addFolderBtnContainer}>
-                    <Button mode="text" onPress={userPickDirectory}>
-                      Add Folder
-                    </Button>
-                    <Button mode="text" onPress={removeAllGrantDirs}>
-                      Remove All
-                    </Button>
-                  </View>
-                </List.Section>
-
-              </>
-              :
-              <>
-                <List.Section>
-                  <List.Subheader>Library Folders</List.Subheader>
+                {userPickDirs.map((item, index) =>(
+                    <View key= {index} style={styles.libraryFolderItemContainer}>
+                      <View style={styles.libraryFolderItemLeftContainer}>
+                        <IconButton icon="folder"/>
+                        <Text>{item.name}</Text>
+                      </View>
+                      <IconButton icon="delete"/>
+                    </View>
+                ))}
+                <View style={styles.addFolderBtnContainer}>
                   <Button mode="text" onPress={userPickDirectory}>
                     Add Folder
                   </Button>
-                </List.Section>
+                  <Button mode="text" onPress={removeAllGrantDirs}>
+                    Remove All
+                  </Button>
+                </View>
+              </>
+              :
+              <>
+                <View style={[styles.libraryFolderItemContainer, {justifyContent: "center"}]}>
+                  <Text>Empty</Text>
+                </View>
+                <Button mode="text" onPress={userPickDirectory}>
+                  Add Folder
+                </Button>
               </>
           }
+        </View>
+
+        <View style={styles.settingTitleContainer}>
+          <Text style={styles.settingTitle}>App Info</Text>
+        </View>
+        <View style={styles.settingItemContainer}>
+          <View style={[styles.libraryFolderItemContainer, {justifyContent: "space-around", }]}>
+            <Text>App Version</Text>
+            <Text>0.0.1</Text>
+          </View>
         </View>
       </>
   );
@@ -122,9 +137,45 @@ const Settings = () => {
 export default Settings;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  settingTitleContainer:{
+    flexDirection:"row",
+    // flex: 1,
+    height: 30,
+    width: 120,
+    marginLeft: 20,
+    marginTop: 20,
+    marginBottom: 10,
+    justifyContent: "flex-start",
+    alignItems:"center",
+    // backgroundColor: "#fffbff",
+    // backgroundColor:"red"
+  },
+  settingTitle:{
+    fontSize: 17
+  },
+  settingItemContainer: {
+    flexDirection:"column",
+    alignItems:"center",
+    // backgroundColor:"pink",
+    // backgroundColor: "#fffbff",
+  },
+  libraryFolderItemContainer:{
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems:"center",
+    borderRadius: 10,
+    height: 35,
+    // backgroundColor:"blue",
     backgroundColor: "#fffbff",
+    width:"88%"
+  },
+  libraryFolderItemLeftContainer: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent:"flex-start",
+    alignItems:"center",
+    height:"100%",
+    // backgroundColor:"green"
   },
   addFolderBtnContainer: {
     flexDirection: "row",
