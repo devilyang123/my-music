@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {ScrollView, StyleSheet, TouchableOpacity, View} from "react-native";
-import {Appbar, Text, Button, Divider } from "react-native-paper";
+import {Appbar, Text, Button, Divider,ActivityIndicator, MD2Colors  } from "react-native-paper";
 import * as ScopedStorage from "react-native-scoped-storage"
 import {useMusicLibStore} from "@/config/ZustandStore";
 import TrackPlayer from 'react-native-track-player';
@@ -31,6 +31,7 @@ export default function MusicList() {
 
   const [musicListState, setMusicListState] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [loadDataState, setLoadDateState] = useState(false);
 
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export default function MusicList() {
 
   const loadMusicList = async () => {
     console.log('MusicList loadMusicList start');
+    setLoadDateState(true)
     try {
       if (params != null) {
         // get from cache
@@ -66,6 +68,8 @@ export default function MusicList() {
       }
     } catch (err) {
       console.log('MusicList loadMusicList err:', err);
+    }finally {
+      setLoadDateState(false)
     }
   }
 
@@ -127,7 +131,13 @@ export default function MusicList() {
           <Appbar.Action icon="refresh" onPress={() => refreshMusicList()}/>
         </Appbar.Header>
         <Divider/>
+
         {musicListState && musicListState.length === 0 ?
+            loadDataState ?
+                <View style={styles.emptyContainer}>
+                  <ActivityIndicator animating={true} size={60} color={MD2Colors.cyanA100} />
+                </View>
+                :
             <View style={styles.emptyContainer}>
               <Text>No Music Files Found</Text>
             </View>
