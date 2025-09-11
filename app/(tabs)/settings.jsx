@@ -79,6 +79,25 @@ const Settings = () => {
     }
   }
 
+  const removeOneGrantDir = async (uri) => {
+    console.log("Settings RemoveOneGrantDir start uri:", uri)
+    try {
+      if (uri){
+        const removedFilterDirs = userPickDirs.filter((item) => item.uri !== uri);
+        console.log("Settings RemoveOneGrantDir start updatedDirs:", removedFilterDirs)
+        setUserPickDir(removedFilterDirs)
+
+        // update cache
+        await setItem(Storage.USER_PICK_DIR, removedFilterDirs)
+
+        // update store
+        useUserGrantDirStore.getState().setUserGrantDir(removedFilterDirs)
+      }
+    }catch (err){
+      console.log("Settings RemoveOneGrantDir err: ", err)
+    }
+  }
+
   return (
       <>
         <Appbar.Header>
@@ -89,7 +108,7 @@ const Settings = () => {
           <Text style={styles.settingTitle}>Library Folders</Text>
         </View>
         <View style={styles.settingItemContainer}>
-          {userPickDirs ?
+          {userPickDirs && userPickDirs.length > 0 ?
               <>
                 {userPickDirs.map((item, index) =>(
                     <View key= {index} style={styles.libraryFolderItemContainer}>
@@ -97,7 +116,7 @@ const Settings = () => {
                         <IconButton icon="folder"/>
                         <Text>{item.name}</Text>
                       </View>
-                      <IconButton icon="delete"/>
+                      <IconButton icon="delete" onPress={() => removeOneGrantDir(item.uri)}/>
                     </View>
                 ))}
                 <View style={styles.addFolderBtnContainer}>
