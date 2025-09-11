@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "my-music",
-    "slug": "my-music",
-    "version": "1.0.0",
+    "name": "My Music",
+    "slug": "MyMusic",
+    "version": "0.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/my-music-icon.png",
     "scheme": "mymusic",

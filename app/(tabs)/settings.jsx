@@ -4,6 +4,7 @@ import {Appbar, Button, Divider, IconButton, Text} from "react-native-paper";
 import Storage, {getItem, removeItem, setItem} from "@/config/Storage";
 import {useUserGrantDirStore} from "@/config/ZustandStore";
 import * as ScopedStorage from "react-native-scoped-storage"
+import Constants from 'expo-constants';
 
 
 const Settings = () => {
@@ -146,7 +147,7 @@ const Settings = () => {
         <View style={styles.settingItemContainer}>
           <View style={[styles.libraryFolderItemContainer, {justifyContent: "space-around", }]}>
             <Text>App Version</Text>
-            <Text>0.0.1</Text>
+            <Text>{Constants.expoConfig.version}</Text>
           </View>
         </View>
       </>
