@@ -7,11 +7,13 @@ import TrackPlayer, {
   useTrackPlayerEvents,
   Event,
   State,
-  RepeatMode
+  RepeatMode,
+  Capability
 } from 'react-native-track-player'
 import Slider from '@react-native-community/slider';
 import TextTicker from "react-native-text-ticker";
 import { Picker } from "@react-native-picker/picker";
+import { createClient,AuthType } from "webdav/react-native";
 
 
 let isPlayerSetup = false;
@@ -26,6 +28,22 @@ export async function setupPlayerOnce() {
     await TrackPlayer.setupPlayer();
     console.log("HomeScreen SetupPlayerOnce Player First Setup")
     isPlayerSetup = true;
+
+    await TrackPlayer.updateOptions({
+      stopWithApp: true,
+      capabilities: [
+        Capability.Play,
+        Capability.Pause,
+        Capability.SkipToNext,
+        Capability.SkipToPrevious,
+        Capability.Stop,
+      ],
+      compactCapabilities: [
+        Capability.Play,
+        Capability.Pause,
+        Capability.SkipToNext,
+      ],
+    });
   }catch (err){
     console.log("HomeScreen SetupPlayerOnce err", err)
   }
@@ -39,11 +57,33 @@ export async function resetPlayer(){
   }
 }
 
+
+export async function webdav() {
+  try {
+    console.log("webdav start");
+    const client = createClient(
+        "http://openlist-en.fancwkj.com:5244/dav/YoutubeVideo/EnglishAudio/BookishEnglish",
+        {
+          username: "admin",
+          password: "OpenListAdmin666666",
+          authType: AuthType.auto
+        }
+    );
+// Get directory contents
+    const directoryItems = await client.getDirectoryContents("/");
+    console.log(directoryItems);
+  }catch (err){
+    console.log("webdav err", err);
+  }
+}
+
+
 export default function HomeScreen() {
 
   const { width } = Dimensions.get("window");
 
   useEffect(() => {
+    webdav()
     setupPlayerOnce()
     setTitle()
   }, [])

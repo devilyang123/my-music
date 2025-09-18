@@ -1,7 +1,7 @@
 {
   "name": "my-music",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "0.0.2",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -47,6 +47,7 @@
     "react-native-track-player": "^4.1.2",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
+    "webdav": "^5.8.0",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
@@ -54,6 +55,7 @@
     "@types/react": "~19.0.10",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
+    "prettier": "^3.6.2",
     "typescript": "~5.8.3"
   },
   "private": true
