@@ -1,92 +1,67 @@
-import React, {useEffect, useState, useRef} from 'react'
-import {Image, StyleSheet, View, Dimensions} from 'react-native'
-import {Appbar, IconButton, Text,Dialog ,Portal, Button} from 'react-native-paper'
-import TrackPlayer, {
-  usePlaybackState,
-  useProgress,
-  useTrackPlayerEvents,
-  Event,
-  State,
-  RepeatMode,
-  Capability
-} from 'react-native-track-player'
-import Slider from '@react-native-community/slider';
+import React, { useEffect, useState, useRef } from "react";
+import { Image, StyleSheet, View, Dimensions } from "react-native";
+import { Appbar, IconButton, Text, Dialog, Portal, Button } from "react-native-paper";
+import TrackPlayer, { usePlaybackState, useProgress, useTrackPlayerEvents, Event, State, RepeatMode, Capability } from "react-native-track-player";
+import Slider from "@react-native-community/slider";
 import TextTicker from "react-native-text-ticker";
 import { Picker } from "@react-native-picker/picker";
-import { createClient,AuthType } from "webdav/react-native";
-
+import { createClient, AuthType } from "webdav/react-native";
 
 let isPlayerSetup = false;
 
 export async function setupPlayerOnce() {
-  console.log("HomeScreen SetupPlayerOnce start")
+  console.log("HomeScreen SetupPlayerOnce start");
   try {
     if (isPlayerSetup) {
-      console.log("HomeScreen SetupPlayerOnce Player Has Already Setup")
+      console.log("HomeScreen SetupPlayerOnce Player Has Already Setup");
       return;
     }
     await TrackPlayer.setupPlayer();
-    console.log("HomeScreen SetupPlayerOnce Player First Setup")
+    console.log("HomeScreen SetupPlayerOnce Player First Setup");
     isPlayerSetup = true;
 
     await TrackPlayer.updateOptions({
       stopWithApp: true,
-      capabilities: [
-        Capability.Play,
-        Capability.Pause,
-        Capability.SkipToNext,
-        Capability.SkipToPrevious,
-        Capability.Stop,
-      ],
-      compactCapabilities: [
-        Capability.Play,
-        Capability.Pause,
-        Capability.SkipToNext,
-      ],
+      capabilities: [Capability.Play, Capability.Pause, Capability.SkipToNext, Capability.SkipToPrevious, Capability.Stop],
+      compactCapabilities: [Capability.Play, Capability.Pause, Capability.SkipToNext],
     });
-  }catch (err){
-    console.log("HomeScreen SetupPlayerOnce err", err)
+  } catch (err) {
+    console.log("HomeScreen SetupPlayerOnce err", err);
   }
 }
-export async function resetPlayer(){
-  console.log("HomeScreen ResetPlayer start")
+export async function resetPlayer() {
+  console.log("HomeScreen ResetPlayer start");
   try {
-    await TrackPlayer.reset()
-  }catch (err){
-    console.log("HomeScreen ResetPlayer err", err)
+    await TrackPlayer.reset();
+  } catch (err) {
+    console.log("HomeScreen ResetPlayer err", err);
   }
 }
-
 
 export async function webdav() {
   try {
     console.log("webdav start");
-    const client = createClient(
-        "http://openlist-en.fancwkj.com:5244/dav/YoutubeVideo/EnglishAudio/BookishEnglish",
-        {
-          username: "admin",
-          password: "OpenListAdmin666666",
-          authType: AuthType.auto
-        }
-    );
-// Get directory contents
+    const client = createClient("http://openlist-en.fancwkj.com:5244/dav/YoutubeVideo/EnglishAudio/BookishEnglish", {
+      username: "admin",
+      password: "OpenListAdmin666666",
+      authType: AuthType.auto,
+    });
+    // Get directory contents
     const directoryItems = await client.getDirectoryContents("/");
     console.log(directoryItems);
-  }catch (err){
+  } catch (err) {
     console.log("webdav err", err);
   }
 }
 
-
 export default function HomeScreen() {
-
   const { width } = Dimensions.get("window");
 
   useEffect(() => {
-    webdav()
-    setupPlayerOnce()
-    setTitle()
-  }, [])
+    // webdav()
+    setupPlayerOnce();
+    setTitle();
+  }, []);
 
   const playbackState = usePlaybackState();
   const progress = useProgress(); // {position, duration, buffered}
@@ -123,7 +98,7 @@ export default function HomeScreen() {
   };
 
   const setTitle = async () => {
-    const currentTrack = await TrackPlayer.getActiveTrack()
+    const currentTrack = await TrackPlayer.getActiveTrack();
     if (currentTrack) {
       setTrackTitle(currentTrack.title || "");
     }
@@ -132,12 +107,11 @@ export default function HomeScreen() {
   useTrackPlayerEvents([Event.PlaybackActiveTrackChanged], (event) => {
     if (event.type === Event.PlaybackActiveTrackChanged) {
       console.log("change music");
-      if (event.track){
+      if (event.track) {
         setTrackTitle(event.track.title ?? "");
       }
     }
   });
-
 
   // play or pause
   const togglePlayPause = async () => {
@@ -162,11 +136,11 @@ export default function HomeScreen() {
     return `${hh}:${mm}:${ss}`;
   };
 
-
   // swap repeat mode
   const toggleRepeatMode = async () => {
     let newMode;
-    if (repeatMode === RepeatMode.Off) newMode = RepeatMode.Track;// single
+    if (repeatMode === RepeatMode.Off)
+      newMode = RepeatMode.Track; // single
     else if (repeatMode === RepeatMode.Track) newMode = RepeatMode.Queue;
     else newMode = RepeatMode.Off;
     setRepeatMode(newMode);
@@ -174,128 +148,111 @@ export default function HomeScreen() {
   };
 
   return (
-      <>
-        <Appbar.Header style={styles.header}>
-          <Appbar.Action icon="stop-circle" onPress={() => resetPlayer()}/>
-        </Appbar.Header>
-        <View style={styles.container}>
-          {/* cover */}
-          <Image
-              source={require('../../assets/images/my-music-default-cover.jpg')}
-              style={styles.artwork}
-          />
+    <>
+      <Appbar.Header style={styles.header}>
+        <Appbar.Action icon="stop-circle" onPress={() => resetPlayer()} />
+      </Appbar.Header>
+      <View style={styles.container}>
+        {/* cover */}
+        <Image source={require("../../assets/images/my-music-default-cover.jpg")} style={styles.artwork} />
 
-          {/* title */}
-          <View style={styles.titleContainer}>
-            <TextTicker
-                style={styles.title}
-                duration={8000}
-                loop
-                bounce={false}
-                repeatSpacer={50}
-                marqueeDelay={1000}
-                // width={width * 0.8}
-            >
-              {trackTitle}
-            </TextTicker>
-          </View>
-
-          {/* progress */}
-          <View style={styles.progressSliderContainer}>
-            <Slider
-                minimumValue={0}
-                maximumValue={progress.duration || 0}
-                step={1}
-                value={seeking ? seekValue : progress.position}
-                minimumTrackTintColor="#6200ee"
-                maximumTrackTintColor="#ddddd"
-                thumbTintColor="#6200ee"
-                style={{width: "100%"}}
-                onSlidingStart={() => {
-                  setSeekValue(progress.position);
-                  setSeeking(true);
-                }}
-                onValueChange={(value) => {
-                  if (seeking) {
-                    setSeekValue(value);
-                  }
-                }}
-                onSlidingComplete={async (value) => {
-                  await TrackPlayer.seekTo(value);
-                  setSeeking(false);
-                }}
-            />
-          </View>
-          {/* time */}
-          <View style={styles.progressTimeContainer}>
-            <Text>{formatTime(seeking ? seekValue : progress.position)}</Text>
-            <Text>{formatTime(progress.duration)}</Text>
-          </View>
-
-          {/* operation */}
-          <View style={styles.controlContainer}>
-            <IconButton
-                icon={hasTimer ? "timer" : "timer-off"}
-                size={20}
-                onPress={() => setTimerVisible(true)}
-            />
-            <IconButton icon="skip-previous" size={40} onPress={() => TrackPlayer.skipToPrevious()}/>
-            <IconButton
-                icon={playbackState.state === State.Playing ? "pause-circle" : "play-circle"}
-                size={60}
-                onPress={() => togglePlayPause()}/>
-            <IconButton icon="skip-next" size={40} onPress={() => TrackPlayer.skipToNext()}/>
-            <IconButton icon={
-              repeatMode === RepeatMode.Off
-                  ? "repeat-off"
-                  : repeatMode === RepeatMode.Track
-                      ? "repeat-once"
-                      : "repeat"
-            } size={20} onPress={() => toggleRepeatMode()}/>
-          </View>
+        {/* title */}
+        <View style={styles.titleContainer}>
+          <TextTicker
+            style={styles.title}
+            duration={8000}
+            loop
+            bounce={false}
+            repeatSpacer={50}
+            marqueeDelay={1000}
+            // width={width * 0.8}
+          >
+            {trackTitle}
+          </TextTicker>
         </View>
 
-        <Portal>
-          <Dialog visible={timerVisible} onDismiss={() => setTimerVisible(false)}>
-            <Dialog.Title>Sleep Timer</Dialog.Title>
-            <Dialog.Content>
-              <View style={{ flexDirection: "row", justifyContent: "center" }}>
-                <View style={{ flex: 1, alignItems: "center" }}>
-                  <Text>Hour</Text>
-                  <Picker
-                      selectedValue={selectedHour}
-                      onValueChange={(itemValue) => setSelectedHour(itemValue)}
-                      style={{ width: 100 }}
-                      mode="dropdown"
-                  >
-                    {hoursArray.map((h) => (
-                        <Picker.Item key={h} label={h.toString()} value={h} />
-                    ))}
-                  </Picker>
-                </View>
-                <View style={{ flex: 1, alignItems: "center" }}>
-                  <Text>Minute</Text>
-                  <Picker
-                      selectedValue={selectedMinute}
-                      onValueChange={(itemValue) => setSelectedMinute(itemValue)}
-                      style={{ width: 100 }}
-                      mode="dropdown"
-                  >
-                    {minutesArray.map((m) => (
-                        <Picker.Item key={m} label={m.toString()} value={m} />
-                    ))}
-                  </Picker>
-                </View>
+        {/* progress */}
+        <View style={styles.progressSliderContainer}>
+          <Slider
+            minimumValue={0}
+            maximumValue={progress.duration || 0}
+            step={1}
+            value={seeking ? seekValue : progress.position}
+            minimumTrackTintColor="#6200ee"
+            maximumTrackTintColor="#ddddd"
+            thumbTintColor="#6200ee"
+            style={{ width: "100%" }}
+            onSlidingStart={() => {
+              setSeekValue(progress.position);
+              setSeeking(true);
+            }}
+            onValueChange={(value) => {
+              if (seeking) {
+                setSeekValue(value);
+              }
+            }}
+            onSlidingComplete={async (value) => {
+              await TrackPlayer.seekTo(value);
+              setSeeking(false);
+            }}
+          />
+        </View>
+        {/* time */}
+        <View style={styles.progressTimeContainer}>
+          <Text>{formatTime(seeking ? seekValue : progress.position)}</Text>
+          <Text>{formatTime(progress.duration)}</Text>
+        </View>
+
+        {/* operation */}
+        <View style={styles.controlContainer}>
+          <IconButton icon={hasTimer ? "timer" : "timer-off"} size={20} onPress={() => setTimerVisible(true)} />
+          <IconButton icon="skip-previous" size={40} onPress={() => TrackPlayer.skipToPrevious()} />
+          <IconButton icon={playbackState.state === State.Playing ? "pause-circle" : "play-circle"} size={60} onPress={() => togglePlayPause()} />
+          <IconButton icon="skip-next" size={40} onPress={() => TrackPlayer.skipToNext()} />
+          <IconButton
+            icon={repeatMode === RepeatMode.Off ? "repeat-off" : repeatMode === RepeatMode.Track ? "repeat-once" : "repeat"}
+            size={20}
+            onPress={() => toggleRepeatMode()}
+          />
+        </View>
+      </View>
+
+      <Portal>
+        <Dialog visible={timerVisible} onDismiss={() => setTimerVisible(false)}>
+          <Dialog.Title>Sleep Timer</Dialog.Title>
+          <Dialog.Content>
+            <View style={{ flexDirection: "row", justifyContent: "center" }}>
+              <View style={{ flex: 1, alignItems: "center" }}>
+                <Text>Hour</Text>
+                <Picker selectedValue={selectedHour} onValueChange={(itemValue) => setSelectedHour(itemValue)} style={{ width: 100 }} mode="dropdown">
+                  {hoursArray.map((h) => (
+                    <Picker.Item key={h} label={h.toString()} value={h} />
+                  ))}
+                </Picker>
               </View>
-            </Dialog.Content>
-            <Dialog.Actions>
-              {hasTimer && <Button onPress={clearTimer}>Clear</Button>}
-              <Button onPress={startTimer}>Confirm</Button>
-            </Dialog.Actions>
-          </Dialog>
-        </Portal>
-      </>
-  )
+              <View style={{ flex: 1, alignItems: "center" }}>
+                <Text>Minute</Text>
+                <Picker
+                  selectedValue={selectedMinute}
+                  onValueChange={(itemValue) => setSelectedMinute(itemValue)}
+                  style={{ width: 100 }}
+                  mode="dropdown"
+                >
+                  {minutesArray.map((m) => (
+                    <Picker.Item key={m} label={m.toString()} value={m} />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+          </Dialog.Content>
+          <Dialog.Actions>
+            {hasTimer && <Button onPress={clearTimer}>Clear</Button>}
+            <Button onPress={startTimer}>Confirm</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+    </>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -305,8 +262,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: "column",
-    justifyContent: 'flex-end',
-    alignItems: 'center',
+    justifyContent: "flex-end",
+    alignItems: "center",
     backgroundColor: "#fffbff",
   },
   artwork: {
@@ -316,17 +273,17 @@ const styles = StyleSheet.create({
     marginBottom: 80,
     // backgroundColor: "red"
   },
-  titleContainer:{
-    flexDirection:"row",
+  titleContainer: {
+    flexDirection: "row",
     justifyContent: "center",
-    alignItems:"center",
-    width:"88%",
+    alignItems: "center",
+    width: "88%",
     // backgroundColor: "pink"
   },
   title: {
     fontSize: 14,
     marginBottom: 10,
-    textAlign: 'center',
+    textAlign: "center",
     // width: "100%",
     height: 20,
     // backgroundColor: "blue"
@@ -342,16 +299,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     height: 20,
     width: "90%",
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     // backgroundColor: "yellow"
   },
   controlContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     width: "90%",
     justifyContent: "center",
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 30,
     marginBottom: 30,
     // backgroundColor: "green"
   },
-})
+});

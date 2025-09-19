@@ -1,22 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
-import { Appbar, Button, Divider, IconButton, Text, TextInput, Snackbar, ActivityIndicator, MD2Colors } from "react-native-paper";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Appbar, Button, Divider, IconButton, Text } from "react-native-paper";
 import Storage, { getItem, removeItem, setItem } from "@/config/Storage";
 import { useUserGrantDirStore } from "@/config/ZustandStore";
 import * as ScopedStorage from "react-native-scoped-storage";
 import Constants from "expo-constants";
-import { createClient, AuthType } from "webdav/react-native";
+import WebdavSettings from "@/component/settings/webdavSettings";
 
 const Settings = () => {
   const [userPickDirs, setUserPickDir] = useState(null);
-
-  const [secureTextEntry, setSecureTextEntry] = useState(true);
-  const [snackbarIsVisible, setSnackbarIsVisible] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(false);
-  const [webdavServer, setWebdavServer] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loadingState, setLoadingState] = useState(false);
 
   useEffect(() => {
     getUserGrantDirs();
@@ -105,157 +97,61 @@ const Settings = () => {
     }
   };
 
-  // webdav test
-  const webdavTestConnect = async () => {
-    console.log(`Settings WebdavTestConnect start, webdavServer: ${webdavServer}, username: ${username}, password: ${password}`);
-    setLoadingState(true);
-    try {
-      // validation param
-      if (webdavServer === "") {
-        setLoadingState(false);
-        setErrorMessage("Error, please enter your webdav server address");
-        setSnackbarIsVisible(true);
-        return;
-      } else if (username === "" || password === "") {
-        setLoadingState(false);
-        setErrorMessage("Error, please enter your username or password");
-        setSnackbarIsVisible(true);
-        return;
-      }
-      const client = await createClient(webdavServer, {
-        authType: AuthType.auto,
-        username: username,
-        password: password,
-      });
-      // console.log(client);
-      const directoryItems = await client.getDirectoryContents("/");
-      // console.log(directoryItems);
-
-      setLoadingState(false);
-
-      setErrorMessage("Connect Succeed");
-      setSnackbarIsVisible(true);
-    } catch (err) {
-      console.log("Unknown error, err: ", err);
-      setLoadingState(false);
-      if (err?.message?.includes("401")) {
-        setErrorMessage("Authentication failed: Invalid username or password.");
-        setSnackbarIsVisible(true);
-      } else if (err?.message?.includes("429")) {
-        setErrorMessage("Request error. Please check your webdav server address.");
-        setSnackbarIsVisible(true);
-      } else if (err?.message?.includes("Network request failed")) {
-        setErrorMessage("Request error. Please check your webdav server address.");
-        setSnackbarIsVisible(true);
-      } else {
-        setErrorMessage("Unknown error");
-        setSnackbarIsVisible(true);
-      }
-    }
-  };
-
   return (
     <>
       <Appbar.Header>
         <Appbar.Content title="Settings" />
       </Appbar.Header>
       <Divider />
-      <View style={styles.settingTitleContainer}>
-        <Text style={styles.settingTitle}>Library Folders</Text>
-      </View>
-      <View style={styles.settingItemContainer}>
-        {userPickDirs && userPickDirs.length > 0 ? (
-          <>
-            {userPickDirs.map((item, index) => (
-              <View key={index} style={styles.libraryFolderItemContainer}>
-                <View style={styles.libraryFolderItemLeftContainer}>
-                  <IconButton icon="folder" />
-                  <Text>{item.name}</Text>
+      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+        <View style={styles.settingTitleContainer}>
+          <Text style={styles.settingTitle}>Library Folders</Text>
+        </View>
+        <View style={styles.settingItemContainer}>
+          {userPickDirs && userPickDirs.length > 0 ? (
+            <>
+              {userPickDirs.map((item, index) => (
+                <View key={index} style={styles.libraryFolderItemContainer}>
+                  <View style={styles.libraryFolderItemLeftContainer}>
+                    <IconButton icon="folder" />
+                    <Text>{item.name}</Text>
+                  </View>
+                  <IconButton icon="delete" onPress={() => removeOneGrantDir(item.uri)} />
                 </View>
-                <IconButton icon="delete" onPress={() => removeOneGrantDir(item.uri)} />
+              ))}
+              <View style={styles.addFolderBtnContainer}>
+                <Button mode="text" onPress={userPickDirectory}>
+                  Add Folder
+                </Button>
+                <Button mode="text" onPress={removeAllGrantDirs}>
+                  Remove All
+                </Button>
               </View>
-            ))}
-            <View style={styles.addFolderBtnContainer}>
+            </>
+          ) : (
+            <>
+              <View style={[styles.libraryFolderItemContainer, { justifyContent: "center" }]}>
+                <Text>Empty</Text>
+              </View>
               <Button mode="text" onPress={userPickDirectory}>
                 Add Folder
               </Button>
-              <Button mode="text" onPress={removeAllGrantDirs}>
-                Remove All
-              </Button>
-            </View>
-          </>
-        ) : (
-          <>
-            <View style={[styles.libraryFolderItemContainer, { justifyContent: "center" }]}>
-              <Text>Empty</Text>
-            </View>
-            <Button mode="text" onPress={userPickDirectory}>
-              Add Folder
-            </Button>
-          </>
-        )}
-      </View>
+            </>
+          )}
+        </View>
 
-      <View style={styles.settingTitleContainer}>
-        <Text style={styles.settingTitle}>Webdav Server</Text>
-      </View>
-      <View style={styles.webdavSettingContainer}>
-        <View>
-          <TextInput
-            label="webdav server address"
-            placeholder="please enter your webdav server address"
-            onChangeText={(text) => setWebdavServer(text)}
-            defaultValue="http://"
-          />
-          <TextInput label="username" placeholder="please enter your username" onChangeText={(text) => setUsername(text)} />
-          <TextInput
-            label="password"
-            secureTextEntry={secureTextEntry}
-            placeholder="please enter your password"
-            right={<TextInput.Icon onPress={() => setSecureTextEntry(!secureTextEntry)} icon="eye" />}
-            onChangeText={(text) => setPassword(text)}
-          />
+        <WebdavSettings />
+
+        <View style={styles.settingTitleContainer}>
+          <Text style={styles.settingTitle}>App Info</Text>
         </View>
-        <View style={styles.addFolderBtnContainer}>
-          <Button mode="text">Save Server</Button>
-          <Button mode="text" onPress={() => webdavTestConnect()}>
-            Test Connect
-          </Button>
-        </View>
-        {loadingState ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator animating={true} size={30} color={MD2Colors.cyanA100} />
+        <View style={styles.settingItemContainer}>
+          <View style={[styles.libraryFolderItemContainer, { justifyContent: "space-around" }]}>
+            <Text>App Version</Text>
+            <Text>{Constants.expoConfig.version}</Text>
           </View>
-        ) : (
-          ""
-        )}
-      </View>
-
-      <View style={styles.settingTitleContainer}>
-        <Text style={styles.settingTitle}>App Info</Text>
-      </View>
-      <View style={styles.settingItemContainer}>
-        <View style={[styles.libraryFolderItemContainer, { justifyContent: "space-around" }]}>
-          <Text>App Version</Text>
-          <Text>{Constants.expoConfig.version}</Text>
         </View>
-      </View>
-
-      <View style={styles.snackbarContainer}>
-        <Snackbar
-          duration={30000}
-          visible={snackbarIsVisible}
-          onDismiss={() => setSnackbarIsVisible(false)}
-          action={{
-            label: "Got it!",
-            onPress: () => {
-              setSnackbarIsVisible(false);
-            },
-          }}
-        >
-          {errorMessage}
-        </Snackbar>
-      </View>
+      </ScrollView>
     </>
   );
 };
@@ -263,18 +159,28 @@ const Settings = () => {
 export default Settings;
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    // backgroundColor: "#fffbff",
+  },
+  contentContainer: {
+    width: "95%",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   settingTitleContainer: {
     flexDirection: "row",
     // flex: 1,
     height: 30,
-    width: "90%",
+    width: "95%",
     marginLeft: 20,
     marginTop: 20,
     marginBottom: 10,
     justifyContent: "flex-start",
     alignItems: "center",
     // backgroundColor: "#fffbff",
-    // backgroundColor:"red"
+    // backgroundColor: "red",
   },
   settingTitle: {
     fontSize: 17,
@@ -282,7 +188,9 @@ const styles = StyleSheet.create({
   settingItemContainer: {
     flexDirection: "column",
     alignItems: "center",
-    // backgroundColor:"pink",
+    width: "90%",
+    marginLeft: 20,
+    // backgroundColor: "pink",
     // backgroundColor: "#fffbff",
   },
   libraryFolderItemContainer: {
@@ -291,9 +199,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 10,
     height: 35,
-    // backgroundColor:"blue",
+    width: "100%",
+    // width: "88%",
     backgroundColor: "#fffbff",
-    width: "88%",
+    // backgroundColor: "blue",
   },
   libraryFolderItemLeftContainer: {
     flex: 1,
@@ -301,26 +210,10 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     alignItems: "center",
     height: "100%",
-    // backgroundColor:"green"
+    // backgroundColor: "green",
   },
   addFolderBtnContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
-  },
-
-  webdavSettingContainer: {
-    width: "90%",
-    // backgroundColor: "red",
-    marginHorizontal: 20,
-    borderRadius: 10,
-  },
-  snackbarContainer: {
-    flex: 1,
-    justifyContent: "space-between",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
 });
