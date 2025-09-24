@@ -6,7 +6,7 @@ import { useMusicLibStore } from "@/config/ZustandStore";
 import TrackPlayer from "react-native-track-player";
 import Storage, { getItem, removeItem, setItem } from "@/config/Storage";
 import { audioMimeTypes } from "@/config/constant";
-import { webdavClient } from "@/config/globalWebdavClientInit";
+import { getWebdavClient } from "@/config/globalWebdavClientInit";
 import * as FileSystem from "expo-file-system";
 
 const player = async (musicListState, index) => {
@@ -45,6 +45,7 @@ export default function MusicList() {
 
   const loadMusicListFromWebdav = async () => {
     console.log("MusicList loadMusicListFromWebdav start");
+    let webdavClient = getWebdavClient();
     if (!webdavClient) {
       console.log("MusicList loadMusicListFromWebdav webdavClient not initialized");
       return;

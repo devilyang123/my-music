@@ -16,7 +16,7 @@ import TrackPlayer from "react-native-track-player";
 import * as FileSystem from "expo-file-system";
 import { audioMimeTypes } from "@/config/constant";
 import Storage, { getItem, setItem, USER_SETTINGS } from "@/config/Storage";
-import { webdavClient } from "@/config/globalWebdavClientInit";
+import { setWebdavClient, getWebdavClient } from "@/config/globalWebdavClientInit";
 
 export default function WebdavSettings({ onAddWebdavFolder }) {
   const [secureTextEntry, setSecureTextEntry] = useState(true);
@@ -38,10 +38,13 @@ export default function WebdavSettings({ onAddWebdavFolder }) {
     console.log(
       `Settings initWebdavClient start, webdavServer: ${webdavServer}, username: ${username}, password: ${password}`
     );
+    let webdavClient = getWebdavClient();
     if (webdavClient) {
       console.log(
         `Settings initWebdavClient , webdavClient already init, webdavServer: ${webdavServer}, username: ${username}, password: ${password}`
       );
+      setErrorMessage("Connect Succeed");
+      setSnackbarIsVisible(true);
     } else {
       setLoadingState(true);
       try {
@@ -69,7 +72,7 @@ export default function WebdavSettings({ onAddWebdavFolder }) {
         setLoadingState(false);
         setErrorMessage("Connect Succeed");
         setSnackbarIsVisible(true);
-        webdavClient = client;
+        setWebdavClient(client);
       } catch (err) {
         console.log("Unknown error, err: ", err);
         setLoadingState(false);
@@ -77,7 +80,7 @@ export default function WebdavSettings({ onAddWebdavFolder }) {
           setErrorMessage("Authentication failed: Invalid username or password.");
           setSnackbarIsVisible(true);
         } else if (err?.message?.includes("429")) {
-          setErrorMessage("Request error. Please check your webdav server address.");
+          setErrorMessage("Too Many Request. Please Retry Later.");
           setSnackbarIsVisible(true);
         } else if (err?.message?.includes("Network request failed")) {
           setErrorMessage("Request error. Please check your webdav server address.");
@@ -91,6 +94,7 @@ export default function WebdavSettings({ onAddWebdavFolder }) {
   };
 
   useEffect(() => {
+    let webdavClient = getWebdavClient();
     if (webdavClient) {
       loadDirectory(currentPath);
     }
@@ -98,6 +102,7 @@ export default function WebdavSettings({ onAddWebdavFolder }) {
 
   const loadDirectory = async (path) => {
     try {
+      let webdavClient = getWebdavClient();
       const list = await webdavClient.getDirectoryContents(path);
       // console.log(list);
       // Define a list of common audio MIME types.
@@ -112,6 +117,7 @@ export default function WebdavSettings({ onAddWebdavFolder }) {
   };
 
   const showServerContent = async () => {
+    let webdavClient = getWebdavClient();
     if (webdavClient) {
       await loadDirectory(currentPath);
       setWebdavFoldersVisible(true);
@@ -177,6 +183,11 @@ export default function WebdavSettings({ onAddWebdavFolder }) {
   const saveWebdavServerInfo = async () => {
     console.log("WebdavSettings saveWebdavServerInfo start");
     // await removeItem(Storage.USER_SETTINGS_KEY);
+    if (username === "" || password === "") {
+      setErrorMessage("Please enter your username or password.");
+      setSnackbarIsVisible(true);
+      return;
+    }
     const userSettings = await getItem(Storage.USER_SETTINGS_KEY);
     let webdavInfo = {
       serverUrl: webdavServer,
@@ -199,11 +210,8 @@ export default function WebdavSettings({ onAddWebdavFolder }) {
       USER_SETTINGS.webdavInfo = webdavInfo;
       await setItem(Storage.USER_SETTINGS_KEY, USER_SETTINGS);
     }
-    setErrorMessage("Save Succeed");
-    setSnackbarIsVisible(true);
-
     // need update webdavClient
-    webdavClient = null;
+    setWebdavClient(null);
     await initWebdavClient(webdavInfo.serverUrl, webdavInfo.username, webdavInfo.password);
   };
 
@@ -216,6 +224,9 @@ export default function WebdavSettings({ onAddWebdavFolder }) {
       setWebdavServer(userSettingObj.webdavInfo.serverUrl);
       setUsername(userSettingObj.webdavInfo.username);
       setPassword(userSettingObj.webdavInfo.password);
+      if (username === "" || password === "") {
+        return;
+      }
       await initWebdavClient(
         userSettingObj.webdavInfo.serverUrl,
         userSettingObj.webdavInfo.username,
@@ -276,8 +287,8 @@ export default function WebdavSettings({ onAddWebdavFolder }) {
           <Button mode="text" onPress={() => saveWebdavServerInfo()}>
             Save Server
           </Button>
-          <Button mode="text" onPress={() => initWebdavClient(webdavServer, username, password)}>
-            Test Connect
+          <Button mode="text" onPress={() => showServerContent()}>
+            Show Folders
           </Button>
         </View>
         {loadingState ? (
@@ -303,7 +314,7 @@ export default function WebdavSettings({ onAddWebdavFolder }) {
           </Snackbar>
         </View>
       </View>
-      <Button onPress={() => showServerContent()}>Show Folders</Button>
+      {/*<Button onPress={() => showServerContent()}>Show Folders</Button>*/}
 
       <Portal>
         <Dialog

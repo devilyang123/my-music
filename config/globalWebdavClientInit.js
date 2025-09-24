@@ -1,7 +1,15 @@
 import Storage, { getItem } from "./Storage";
 import { createClient, AuthType } from "webdav/react-native";
 
-export let webdavClient = null;
+let webdavClient = null;
+
+export function setWebdavClient(client) {
+  webdavClient = client;
+}
+
+export const getWebdavClient = () => {
+  return webdavClient;
+};
 
 // init webdav
 const initWebdavClient = async (webdavServer, username, password) => {
