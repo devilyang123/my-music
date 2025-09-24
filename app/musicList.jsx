@@ -1,108 +1,106 @@
-import React, {useEffect, useState} from "react";
-import {ScrollView, StyleSheet, TouchableOpacity, View} from "react-native";
-import {Appbar, Text, Button, Divider,ActivityIndicator, MD2Colors  } from "react-native-paper";
-import * as ScopedStorage from "react-native-scoped-storage"
-import {useMusicLibStore} from "@/config/ZustandStore";
-import TrackPlayer from 'react-native-track-player';
-import {getItem, removeItem, setItem} from "@/config/Storage";
+import React, { useEffect, useState } from "react";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Appbar, Text, Button, Divider, ActivityIndicator, MD2Colors } from "react-native-paper";
+import * as ScopedStorage from "react-native-scoped-storage";
+import { useMusicLibStore } from "@/config/ZustandStore";
+import TrackPlayer from "react-native-track-player";
+import { getItem, removeItem, setItem } from "@/config/Storage";
+import { audioMimeTypes } from "@/config/constant";
 
 const player = async (musicListState, index) => {
-  console.log('MusicList player start:', index);
+  console.log("MusicList player start:", index);
   try {
-    let tackArr = musicListState.map(item => {
+    let tackArr = musicListState.map((item) => {
       return {
         id: item.uri,
         url: item.uri,
         title: item.name,
-      }
-    })
-    await TrackPlayer.setQueue(tackArr)
-    await TrackPlayer.skip(index)
-    await TrackPlayer.play()
-  }catch (err){
-    console.log('MusicList player err:', err);
+      };
+    });
+    await TrackPlayer.setQueue(tackArr);
+    await TrackPlayer.skip(index);
+    await TrackPlayer.play();
+  } catch (err) {
+    console.log("MusicList player err:", err);
   }
-}
+};
 
 export default function MusicList() {
-
   const params = useMusicLibStore((state) => state.musicLib);
-  console.log('MusicList start, params:', params);
+  console.log("MusicList start, params:", params);
 
   const [musicListState, setMusicListState] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [loadDataState, setLoadDateState] = useState(false);
 
-
   useEffect(() => {
     loadMusicList();
-  }, [params])
+  }, [params]);
 
   useEffect(() => {
     setSelectedItem();
   }, [musicListState]);
 
   const loadMusicList = async () => {
-    console.log('MusicList loadMusicList start');
-    setLoadDateState(true)
+    console.log("MusicList loadMusicList start");
+    setLoadDateState(true);
     try {
       if (params != null) {
         // get from cache
-        const cacheMusicList = await getItem(params.uri)
+        const cacheMusicList = await getItem(params.uri);
         if (cacheMusicList == null) {
-          console.log('MusicList loadMusicList from file system');
+          console.log("MusicList loadMusicList from file system");
           // no cache
           const musicList = await ScopedStorage.listFiles(params.uri);
-          const filterData = filterAudioFiles(musicList)
-          setMusicListState(filterData)
-          if (filterData.length > 0){
+          const filterData = filterAudioFiles(musicList);
+          setMusicListState(filterData);
+          if (filterData.length > 0) {
             // set cache
-            await setItem(params.uri, filterData)
+            await setItem(params.uri, filterData);
           }
-        }else {
-          console.log('MusicList loadMusicList from cache');
-          setMusicListState(JSON.parse(cacheMusicList))
+        } else {
+          console.log("MusicList loadMusicList from cache");
+          setMusicListState(JSON.parse(cacheMusicList));
         }
       } else {
-        console.log('MusicList loadMusicList err, params is empty');
+        console.log("MusicList loadMusicList err, params is empty");
       }
     } catch (err) {
-      console.log('MusicList loadMusicList err:', err);
-    }finally {
-      setLoadDateState(false)
+      console.log("MusicList loadMusicList err:", err);
+    } finally {
+      setLoadDateState(false);
     }
-  }
+  };
 
   const refreshMusicList = async () => {
-    console.log('MusicList refreshMusicList start');
+    console.log("MusicList refreshMusicList start");
     try {
       // clear cache
-      await removeItem(params.uri)
+      await removeItem(params.uri);
       // reload data
-      await loadMusicList()
-    }catch (err){
-      console.log('MusicList refreshMusicList err', err);
+      await loadMusicList();
+    } catch (err) {
+      console.log("MusicList refreshMusicList err", err);
     }
-  }
-
+  };
 
   const setSelectedItem = async () => {
-    console.log('MusicList setSelectedItem start');
+    console.log("MusicList setSelectedItem start");
     try {
-      const currentTrack = await TrackPlayer.getActiveTrack()
+      const currentTrack = await TrackPlayer.getActiveTrack();
       if (currentTrack) {
-        console.log('MusicList setSelectedItem currentTrackUri:', currentTrack.id);
+        console.log("MusicList setSelectedItem currentTrackUri:", currentTrack.id);
         musicListState.forEach((item, index) => {
           if (currentTrack.id === item.uri) {
-            console.log('MusicList setSelectedItem itemUri:', item.uri);
-            setSelectedIndex(index)
+            console.log("MusicList setSelectedItem itemUri:", item.uri);
+            setSelectedIndex(index);
           }
-        })
+        });
       }
-    }catch (err){
-      console.log('MusicList setSelectedItem err', err);
+    } catch (err) {
+      console.log("MusicList setSelectedItem err", err);
     }
-  }
+  };
 
   // filter audio files
   const filterAudioFiles = (files) => {
@@ -111,70 +109,57 @@ export default function MusicList() {
       return [];
     }
     // Define a list of common audio MIME types.
-    const audioMimeTypes = new Set([
-      'audio/mpeg', // .mp3
-      'audio/ogg',  // .ogg
-      'audio/wav',  // .wav
-      'audio/aac',  // .aac
-      'audio/flac', // .flac
-      'audio/mp4',  // .m4a
-    ]);
-    return files.filter(file => {
+
+    return files.filter((file) => {
       // Check if the object is a file and its MIME type is in our set.
-      return file.type === 'file' && audioMimeTypes.has(file.mime);
+      return file.type === "file" && audioMimeTypes.has(file.mime);
     });
   };
 
   return (
-      <View style={styles.mainContainer}>
-        <Appbar.Header style={styles.header}>
-          <Appbar.Action icon="refresh" onPress={() => refreshMusicList()}/>
-        </Appbar.Header>
-        <Divider/>
+    <View style={styles.mainContainer}>
+      <Appbar.Header style={styles.header}>
+        <Appbar.Action icon="refresh" onPress={() => refreshMusicList()} />
+      </Appbar.Header>
+      <Divider />
 
-        {musicListState && musicListState.length === 0 ?
-            loadDataState ?
-                <View style={styles.emptyContainer}>
-                  <ActivityIndicator animating={true} size={60} color={MD2Colors.cyanA100} />
+      {musicListState && musicListState.length === 0 ? (
+        loadDataState ? (
+          <View style={styles.emptyContainer}>
+            <ActivityIndicator animating={true} size={60} color={MD2Colors.cyanA100} />
+          </View>
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Text>No Music Files Found</Text>
+          </View>
+        )
+      ) : (
+        <ScrollView style={styles.scrollViewContainer} contentContainerStyle={styles.contentContainer}>
+          {musicListState.map((item, index) => {
+            const isSelected = index === selectedIndex;
+
+            return (
+              <TouchableOpacity
+                key={index}
+                onPress={() => {
+                  setSelectedIndex(index);
+                  player(musicListState, index);
+                }}
+                style={[styles.musicItemContainer, isSelected && styles.selectedItem]}
+              >
+                <Button icon="music" compact />
+                <View style={styles.nameContainer}>
+                  <Text numberOfLines={1} ellipsizeMode="tail" style={styles.nameStyle}>
+                    {item.name}
+                  </Text>
                 </View>
-                :
-            <View style={styles.emptyContainer}>
-              <Text>No Music Files Found</Text>
-            </View>
-            :
-            <ScrollView style={styles.scrollViewContainer}
-                        contentContainerStyle={styles.contentContainer}>
-              {musicListState.map((item, index) => {
-                const isSelected = index === selectedIndex;
-
-                return (
-                    <TouchableOpacity
-                        key={index}
-                        onPress={() => {
-                          setSelectedIndex(index);
-                          player(musicListState, index);
-                        }}
-                        style={[
-                          styles.musicItemContainer,
-                          isSelected && styles.selectedItem,
-                        ]}
-                    >
-                      <Button icon="music" compact/>
-                      <View style={styles.nameContainer}>
-                        <Text
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
-                            style={styles.nameStyle}
-                        >
-                          {item.name}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                );
-              })}
-            </ScrollView>}
-      </View>
-  )
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -185,10 +170,10 @@ const styles = StyleSheet.create({
   header: {
     justifyContent: "flex-end",
   },
-  emptyContainer:{
+  emptyContainer: {
     flex: 1,
-    justifyContent:"center",
-    alignItems:"center"
+    justifyContent: "center",
+    alignItems: "center",
   },
   scrollViewContainer: {
     flex: 1,
@@ -215,5 +200,5 @@ const styles = StyleSheet.create({
   },
   nameStyle: {
     fontSize: 16,
-  }
+  },
 });
