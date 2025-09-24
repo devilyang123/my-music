@@ -25,12 +25,12 @@
 - Sleep timer
 
 ## Roadmap
-- Dark theme
-- Shuffle playback
-- Lyrics display
-- Custom album artwork
-- WebDAV support
-- ...more to come
+- ○ Dark theme
+- ○ Shuffle playback
+- ○ Lyrics display
+- ○ Custom album artwork
+- ✅ WebDAV support
+- ○ ...more to come
 
 ## Tech Stack
 - **React Native**
