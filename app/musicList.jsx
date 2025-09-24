@@ -4,8 +4,10 @@ import { Appbar, Text, Button, Divider, ActivityIndicator, MD2Colors } from "rea
 import * as ScopedStorage from "react-native-scoped-storage";
 import { useMusicLibStore } from "@/config/ZustandStore";
 import TrackPlayer from "react-native-track-player";
-import { getItem, removeItem, setItem } from "@/config/Storage";
+import Storage, { getItem, removeItem, setItem } from "@/config/Storage";
 import { audioMimeTypes } from "@/config/constant";
+import { webdavClient } from "@/config/globalWebdavClientInit";
+import * as FileSystem from "expo-file-system";
 
 const player = async (musicListState, index) => {
   console.log("MusicList player start:", index);
@@ -41,26 +43,84 @@ export default function MusicList() {
     setSelectedItem();
   }, [musicListState]);
 
+  const loadMusicListFromWebdav = async () => {
+    console.log("MusicList loadMusicListFromWebdav start");
+    if (!webdavClient) {
+      console.log("MusicList loadMusicListFromWebdav webdavClient not initialized");
+      return;
+    }
+    const musicList = await webdavClient.getDirectoryContents(params.uri);
+    const convertList = musicList.map((item) => ({
+      size: item.size,
+      mime: item.mime,
+      lastModified: Math.floor(new Date(item.lastmod).getTime()),
+      name: item.basename,
+      type: item.type,
+      uri: item.filename,
+    }));
+    const filterData = filterAudioFiles(convertList);
+    let downloadArr = [];
+    for (const item of filterData) {
+      const userSetting = JSON.parse(await getItem(Storage.USER_SETTINGS_KEY));
+
+      // local cache
+      const localFile = FileSystem.cacheDirectory + encodeURI(item.name);
+      console.log("localFile: ", localFile);
+
+      // check file exists
+      const fileInfo = await FileSystem.getInfoAsync(localFile);
+      let fileUri = localFile;
+
+      if (fileInfo.exists) {
+        console.log("File already cached:", localFile);
+      } else {
+        // remote URL
+        const remoteUrl = userSetting.webdavInfo.serverUrl + encodeURI(item.uri);
+        console.log("remoteUrl: ", remoteUrl);
+
+        // download
+        const result = await FileSystem.downloadAsync(remoteUrl, localFile, {
+          headers: {
+            Authorization: "Basic " + btoa(`${userSetting.webdavInfo.username}:${userSetting.webdavInfo.password}`),
+          },
+        });
+        fileUri = result.uri;
+        console.log("Downloaded to", result.uri);
+      }
+      item.uri = fileUri;
+      downloadArr.push(item);
+    }
+    setMusicListState(downloadArr);
+    // console.log("MusicList loadMusicList from webdav, downloadArr: ", downloadArr);
+  };
+
   const loadMusicList = async () => {
     console.log("MusicList loadMusicList start");
     setLoadDateState(true);
     try {
       if (params != null) {
-        // get from cache
-        const cacheMusicList = await getItem(params.uri);
-        if (cacheMusicList == null) {
-          console.log("MusicList loadMusicList from file system");
-          // no cache
-          const musicList = await ScopedStorage.listFiles(params.uri);
-          const filterData = filterAudioFiles(musicList);
-          setMusicListState(filterData);
-          if (filterData.length > 0) {
-            // set cache
-            await setItem(params.uri, filterData);
+        if (params.libraryType === "local") {
+          // get from cache
+          const cacheMusicList = await getItem(params.uri);
+          // console.log("MusicList loadMusicList from cache， cacheMusicList：", cacheMusicList);
+          console.log("MusicList loadMusicList from cache， cacheMusicList");
+          if (cacheMusicList == null) {
+            console.log("MusicList loadMusicList from file system");
+            // no cache
+            const musicList = await ScopedStorage.listFiles(params.uri);
+            const filterData = filterAudioFiles(musicList);
+            setMusicListState(filterData);
+            if (filterData.length > 0) {
+              // set cache
+              await setItem(params.uri, filterData);
+            }
+          } else {
+            console.log("MusicList loadMusicList from cache");
+            setMusicListState(JSON.parse(cacheMusicList));
           }
-        } else {
-          console.log("MusicList loadMusicList from cache");
-          setMusicListState(JSON.parse(cacheMusicList));
+        }
+        if (params.libraryType === "webdav") {
+          await loadMusicListFromWebdav();
         }
       } else {
         console.log("MusicList loadMusicList err, params is empty");
@@ -109,7 +169,6 @@ export default function MusicList() {
       return [];
     }
     // Define a list of common audio MIME types.
-
     return files.filter((file) => {
       // Check if the object is a file and its MIME type is in our set.
       return file.type === "file" && audioMimeTypes.has(file.mime);

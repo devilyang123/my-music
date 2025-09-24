@@ -8,7 +8,7 @@ import Constants from "expo-constants";
 import WebdavSettings from "@/component/settings/webdavSettings";
 
 const Settings = () => {
-  const [userPickDirs, setUserPickDir] = useState(null);
+  const [userGrantDirs, setUserGrantDirs] = useState(null);
 
   useEffect(() => {
     getUserGrantDirs();
@@ -20,7 +20,7 @@ const Settings = () => {
       const userGrantDirArr = await getItem(Storage.USER_PICK_DIR);
       console.log("Settings GetUserGrantDirs from cache: ", userGrantDirArr);
       if (userGrantDirArr != null) {
-        setUserPickDir(JSON.parse(userGrantDirArr));
+        setUserGrantDirs(JSON.parse(userGrantDirArr));
         useUserGrantDirStore.getState().setUserGrantDir(JSON.parse(userGrantDirArr));
       }
     } catch (err) {
@@ -29,17 +29,27 @@ const Settings = () => {
   };
 
   // let user grant dir
-  const userPickDirectory = async () => {
+  const userPickDirectory = async (dirSourceType, webdavLibrary) => {
     console.log("Settings UserPickDirectory start");
+
     try {
-      const userGrantDir = await ScopedStorage.openDocumentTree(true);
+      let userGrantDir;
+      if (dirSourceType === "local") {
+        userGrantDir = await ScopedStorage.openDocumentTree(true);
+      } else {
+        // webdav
+        userGrantDir = webdavLibrary;
+      }
       if (userGrantDir == null) {
         console.log("Settings UserPickDirectory grant fail");
         return;
       }
+      if (dirSourceType === "local") {
+        userGrantDir.libraryType = "local";
+      }
       // grant success
       console.log("Settings UserPickDirectory grant success");
-      if (userPickDirs == null) {
+      if (userGrantDirs == null) {
         // first grant
         console.log("Settings UserPickDirectory first grant");
         const userPickDirArr = [userGrantDir];
@@ -48,7 +58,7 @@ const Settings = () => {
       } else {
         // need to valid grant dir exists
         console.log("Settings UserPickDirectory valid grant dir exists");
-        let index = userPickDirs.findIndex((item) => item.uri === userGrantDir.uri);
+        let index = userGrantDirs.findIndex((item) => item.uri === userGrantDir.uri);
         if (index === -1) {
           // not exists
           console.log("Settings UserPickDirectory valid grant dir not exists");
@@ -72,7 +82,7 @@ const Settings = () => {
     try {
       await removeItem(Storage.USER_PICK_DIR);
       useUserGrantDirStore.getState().removeUserGrantDir();
-      setUserPickDir(null);
+      setUserGrantDirs(null);
     } catch (err) {
       console.log("Settings RemoveAllGrantDirs err: ", err);
     }
@@ -82,9 +92,9 @@ const Settings = () => {
     console.log("Settings RemoveOneGrantDir start uri:", uri);
     try {
       if (uri) {
-        const removedFilterDirs = userPickDirs.filter((item) => item.uri !== uri);
+        const removedFilterDirs = userGrantDirs.filter((item) => item.uri !== uri);
         console.log("Settings RemoveOneGrantDir start updatedDirs:", removedFilterDirs);
-        setUserPickDir(removedFilterDirs);
+        setUserGrantDirs(removedFilterDirs);
 
         // update cache
         await setItem(Storage.USER_PICK_DIR, removedFilterDirs);
@@ -108,19 +118,21 @@ const Settings = () => {
           <Text style={styles.settingTitle}>Library Folders</Text>
         </View>
         <View style={styles.settingItemContainer}>
-          {userPickDirs && userPickDirs.length > 0 ? (
+          {userGrantDirs && userGrantDirs.length > 0 ? (
             <>
-              {userPickDirs.map((item, index) => (
+              {userGrantDirs.map((item, index) => (
                 <View key={index} style={styles.libraryFolderItemContainer}>
                   <View style={styles.libraryFolderItemLeftContainer}>
-                    <IconButton icon="folder" />
-                    <Text>{item.name}</Text>
+                    <IconButton icon={item.libraryType === "local" ? "folder" : "web"} />
+                    <Text numberOfLines={1} ellipsizeMode="tail">
+                      {item.name}
+                    </Text>
                   </View>
                   <IconButton icon="delete" onPress={() => removeOneGrantDir(item.uri)} />
                 </View>
               ))}
               <View style={styles.addFolderBtnContainer}>
-                <Button mode="text" onPress={userPickDirectory}>
+                <Button mode="text" onPress={() => userPickDirectory("local")}>
                   Add Folder
                 </Button>
                 <Button mode="text" onPress={removeAllGrantDirs}>
@@ -133,14 +145,16 @@ const Settings = () => {
               <View style={[styles.libraryFolderItemContainer, { justifyContent: "center" }]}>
                 <Text>Empty</Text>
               </View>
-              <Button mode="text" onPress={userPickDirectory}>
+              <Button mode="text" onPress={() => userPickDirectory("local")}>
                 Add Folder
               </Button>
             </>
           )}
         </View>
 
-        <WebdavSettings />
+        <WebdavSettings
+          onAddWebdavFolder={(dirSourceType, webdavLibrary) => userPickDirectory(dirSourceType, webdavLibrary)}
+        />
 
         <View style={styles.settingTitleContainer}>
           <Text style={styles.settingTitle}>App Info</Text>

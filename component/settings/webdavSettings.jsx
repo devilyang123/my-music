@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { StyleSheet, View, ScrollView } from "react-native";
 import {
   Button,
@@ -15,11 +15,10 @@ import { createClient, AuthType } from "webdav/react-native";
 import TrackPlayer from "react-native-track-player";
 import * as FileSystem from "expo-file-system";
 import { audioMimeTypes } from "@/config/constant";
-import Storage, { getItem, setItem, USER_SETTINGS, removeItem } from "@/config/Storage";
+import Storage, { getItem, setItem, USER_SETTINGS } from "@/config/Storage";
+import { webdavClient } from "@/config/globalWebdavClientInit";
 
-let webdavClient = null;
-
-export default function WebdavSettings() {
+export default function WebdavSettings({ onAddWebdavFolder }) {
   const [secureTextEntry, setSecureTextEntry] = useState(true);
   const [snackbarIsVisible, setSnackbarIsVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState(false);
@@ -32,6 +31,7 @@ export default function WebdavSettings() {
   const [currentPath, setCurrentPath] = useState("/");
   const [entries, setEntries] = useState([]);
   const [history, setHistory] = useState([]);
+  const currentWebdavFolder = useRef(null);
 
   // init webdav
   const initWebdavClient = async (webdavServer, username, password) => {
@@ -99,7 +99,7 @@ export default function WebdavSettings() {
   const loadDirectory = async (path) => {
     try {
       const list = await webdavClient.getDirectoryContents(path);
-      console.log(list);
+      // console.log(list);
       // Define a list of common audio MIME types.
       setEntries(
         list.filter((item) => {
@@ -125,6 +125,7 @@ export default function WebdavSettings() {
     if (item.type === "directory") {
       setHistory((prev) => [...prev, currentPath]);
       setCurrentPath(item.filename);
+      currentWebdavFolder.current = item;
     }
     if (item.type === "file" && item.mime.includes("audio")) {
       // local cache
@@ -227,6 +228,22 @@ export default function WebdavSettings() {
     initUserSettings();
   }, []);
 
+  const addWebdavFolderToLibrary = async () => {
+    if (currentWebdavFolder.current) {
+      console.log("addWebdavFolderToLibrary start, currentWebdavFolder: ", currentWebdavFolder.current);
+      let webdavLibrary = {};
+      webdavLibrary.lastModified = Math.floor(new Date(currentWebdavFolder.current.lastmod).getTime());
+      webdavLibrary.name = currentWebdavFolder.current.basename;
+      webdavLibrary.type = currentWebdavFolder.current.type;
+      webdavLibrary.uri = currentWebdavFolder.current.filename;
+      webdavLibrary.libraryType = "webdav";
+      console.log("addWebdavFolderToLibrary, webdavLibrary: ", webdavLibrary);
+      onAddWebdavFolder("webdav", webdavLibrary);
+
+      setWebdavFoldersVisible(false);
+    }
+  };
+
   return (
     <>
       <View style={styles.settingTitleContainer}>
@@ -312,7 +329,7 @@ export default function WebdavSettings() {
           </Dialog.ScrollArea>
           <Dialog.Actions>
             <Button onPress={() => setWebdavFoldersVisible(false)}>Cancel</Button>
-            <Button>Add To Library</Button>
+            <Button onPress={() => addWebdavFolderToLibrary()}>Add To Library</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
