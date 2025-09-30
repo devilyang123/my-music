@@ -26,7 +26,7 @@
 
 ## Roadmap
 - ○ Dark theme
-- ○ Shuffle playback
+- ✅ Shuffle playback
 - ○ Lyrics display
 - ○ Custom album artwork
 - ✅ WebDAV support
