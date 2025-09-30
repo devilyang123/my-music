@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Appbar, Text, Button, Divider, ActivityIndicator, MD2Colors } from "react-native-paper";
 import * as ScopedStorage from "react-native-scoped-storage";
-import { useMusicLibStore } from "@/config/ZustandStore";
+import { useMusicLibStore, useMusicPlaySourceStore } from "@/config/ZustandStore";
 import TrackPlayer from "react-native-track-player";
 import Storage, { getItem, removeItem, setItem } from "@/config/Storage";
 import { audioMimeTypes } from "@/config/constant";
@@ -19,9 +19,11 @@ const player = async (musicListState, index) => {
         title: item.name,
       };
     });
+    useMusicPlaySourceStore.getState().setMusicPlaySource(true);
     await TrackPlayer.setQueue(tackArr);
     await TrackPlayer.skip(index);
     await TrackPlayer.play();
+    useMusicPlaySourceStore.getState().setMusicPlaySource(false);
   } catch (err) {
     console.log("MusicList player err:", err);
   }

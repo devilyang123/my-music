@@ -13,10 +13,11 @@ import TrackPlayer, {
 import Slider from "@react-native-community/slider";
 import TextTicker from "react-native-text-ticker";
 import { Picker } from "@react-native-picker/picker";
+import { useMusicPlaySourceStore } from "@/config/ZustandStore";
 
 let isPlayerSetup = false;
 
-export async function setupPlayerOnce() {
+async function setupPlayerOnce() {
   console.log("HomeScreen SetupPlayerOnce start");
   try {
     if (isPlayerSetup) {
@@ -42,7 +43,7 @@ export async function setupPlayerOnce() {
     console.log("HomeScreen SetupPlayerOnce err", err);
   }
 }
-export async function resetPlayer() {
+async function resetPlayer() {
   console.log("HomeScreen ResetPlayer start");
   try {
     await TrackPlayer.reset();
@@ -63,6 +64,9 @@ export default function HomeScreen() {
   const [seeking, setSeeking] = useState(false);
   const [seekValue, setSeekValue] = useState(0);
   const [repeatMode, setRepeatMode] = useState(RepeatMode.Off);
+  const [isShuffle, setIsShuffle] = useState(false);
+  const shuffleLock = useRef(false);
+  const playSource = useMusicPlaySourceStore((state) => state.musicPlaySource);
 
   const [timerVisible, setTimerVisible] = useState(false);
   const [hasTimer, setHasTimer] = useState(false);
@@ -98,14 +102,54 @@ export default function HomeScreen() {
     }
   };
 
-  useTrackPlayerEvents([Event.PlaybackActiveTrackChanged], (event) => {
-    if (event.type === Event.PlaybackActiveTrackChanged) {
-      console.log("change music");
-      if (event.track) {
-        setTrackTitle(event.track.title ?? "");
+  const shuffleMusic = async () => {
+    console.log("shuffleMusic start");
+    shuffleLock.current = true;
+    const queue = await TrackPlayer.getQueue();
+    if (queue.length > 0) {
+      const randomIndex = Math.floor(Math.random() * queue.length);
+      await TrackPlayer.skip(randomIndex);
+      await TrackPlayer.play();
+      // later release lock, avoid event repeat
+      setTimeout(() => {
+        shuffleLock.current = false;
+      }, 500);
+    }
+  };
+
+  useTrackPlayerEvents(
+    [Event.PlaybackActiveTrackChanged, Event.PlaybackQueueEnded, Event.PlaybackError],
+    async (event) => {
+      if (event.type === Event.PlaybackActiveTrackChanged) {
+        console.log("PlaybackActiveTrackChanged start");
+        if (event.track) {
+          setTrackTitle(event.track.title ?? "");
+          if (isShuffle) {
+            if (repeatMode === RepeatMode.Track) {
+              return;
+            }
+            if (playSource) {
+              console.log("PlaybackActiveTrackChanged,playSource: ", playSource);
+              return;
+            }
+            if (!shuffleLock.current) {
+              console.log("PlaybackActiveTrackChanged, shuffle start");
+              await shuffleMusic();
+            }
+          }
+        }
+      }
+
+      if (event.type === Event.PlaybackQueueEnded) {
+        console.log("PlaybackQueueEnded start");
+        await shuffleMusic();
+      }
+
+      if (event.type === Event.PlaybackError) {
+        console.log(`PlaybackError start, code: ${event.code}, error: ${event.message}`);
       }
     }
-  });
+  );
 
   // play or pause
   const togglePlayPause = async () => {
@@ -130,6 +174,10 @@ export default function HomeScreen() {
     return `${hh}:${mm}:${ss}`;
   };
 
+  const toggleShuffle = () => {
+    setIsShuffle((prev) => !prev);
+  };
+
   // swap repeat mode
   const toggleRepeatMode = async () => {
     let newMode;
@@ -152,15 +200,7 @@ export default function HomeScreen() {
 
         {/* title */}
         <View style={styles.titleContainer}>
-          <TextTicker
-            style={styles.title}
-            duration={8000}
-            loop
-            bounce={false}
-            repeatSpacer={50}
-            marqueeDelay={1000}
-            // width={width * 0.8}
-          >
+          <TextTicker style={styles.title} duration={8000} loop bounce={false} repeatSpacer={50} marqueeDelay={1000}>
             {trackTitle}
           </TextTicker>
         </View>
@@ -207,6 +247,7 @@ export default function HomeScreen() {
             onPress={() => togglePlayPause()}
           />
           <IconButton icon="skip-next" size={40} onPress={() => TrackPlayer.skipToNext()} />
+          <IconButton icon={isShuffle ? "shuffle" : "shuffle-disabled"} size={20} onPress={toggleShuffle} />
           <IconButton
             icon={
               repeatMode === RepeatMode.Off ? "repeat-off" : repeatMode === RepeatMode.Track ? "repeat-once" : "repeat"
