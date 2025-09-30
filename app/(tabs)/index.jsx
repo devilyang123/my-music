@@ -14,6 +14,7 @@ import Slider from "@react-native-community/slider";
 import TextTicker from "react-native-text-ticker";
 import { Picker } from "@react-native-picker/picker";
 import { useMusicPlaySourceStore } from "@/config/ZustandStore";
+import BackgroundTimer from "react-native-background-timer";
 
 let isPlayerSetup = false;
 
@@ -77,12 +78,15 @@ export default function HomeScreen() {
   const minutesArray = Array.from({ length: 60 }, (_, i) => i);
 
   const startTimer = () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
+    if (timerRef.current) {
+      BackgroundTimer.clearTimeout(timerRef.current);
+    }
     const totalMs = (selectedHour * 60 + selectedMinute) * 60 * 1000;
     if (totalMs > 0) {
-      timerRef.current = setTimeout(() => {
+      timerRef.current = BackgroundTimer.setTimeout(() => {
         TrackPlayer.pause();
         setHasTimer(false);
+        timerRef.current = null;
       }, totalMs);
       setHasTimer(true);
     }
@@ -90,7 +94,10 @@ export default function HomeScreen() {
   };
 
   const clearTimer = () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
+    if (timerRef.current) {
+      BackgroundTimer.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
     setHasTimer(false);
     setTimerVisible(false);
   };
